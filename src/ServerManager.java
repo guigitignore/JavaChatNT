@@ -16,6 +16,8 @@ public class ServerManager extends ServerSocketWorker{
         super.run();
 
         if (server!=null){
+            Logger.i(String.format("Server manager listening on port %d...", getPort()));
+
             while (true){
                 try{
                     Socket client=server.accept();
