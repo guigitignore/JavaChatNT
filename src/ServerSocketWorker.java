@@ -20,6 +20,7 @@ public abstract class ServerSocketWorker extends Thread implements IWorker{
         try{
             server=new ServerSocket(getPort());
         }catch(IOException e){
+            Logger.e(e.getMessage());
             server=null;
         }
     }

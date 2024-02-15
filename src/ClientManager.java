@@ -7,13 +7,14 @@ import java.net.Socket;
 import java.util.StringTokenizer;
 
 public class ClientManager extends SocketWorker{
+
+    public ClientManager(Socket socket) {
+        super(socket);
+    }
+
     private PrintStream localPrintStream;
     private PrintStream sharedPrintStream;
 
-    public ClientManager(Socket socket){
-        this.socket=socket;
-        WorkerManager.getInstance().registerAndStart(this);
-    }
 
     public PrintStream getLocalPrintStream(){
         return localPrintStream;

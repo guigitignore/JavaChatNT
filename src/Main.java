@@ -2,6 +2,8 @@ class Main{
     public static void main(String[] args) {
         Logger.i("Starting engine...");
         WorkerManager.getInstance().registerAndStart(new ServerManager());
+        WorkerManager.getInstance().registerAndStart(new ServerChat());
+        WorkerManager.getInstance().registerAndStart(new ServerTelnet());
 
         Runtime.getRuntime().addShutdownHook(new Thread(()->{
             Logger.w("Trigger engine interruption...");
