@@ -13,7 +13,6 @@ public class ServiceTelnet extends SocketWorker {
     private InputStream upstreamInput;
     private OutputStream upstreamOutput;
     private Socket upstreamSocket;
-    private PacketChat incoming;
 
     public ServiceTelnet(Socket socket) {
         super(socket);
@@ -28,8 +27,16 @@ public class ServiceTelnet extends SocketWorker {
         upstreamOutput=upstreamSocket.getOutputStream();
     }
 
-    public void broadcastMessage(String message){
-        PacketChat outgoing=PacketChatFactory.createMessagePacket("inconito", message);
+    public BufferedReader getInputStream(){
+        return input;
+    }
+
+    public PrintStream getOutputStream(){
+        return output;
+    }
+
+    public void sendMessage(String message,String... dests){
+        PacketChat outgoing=PacketChatFactory.createMessagePacket("inconito", message,dests);
         try{
             outgoing.send(upstreamOutput);
         }catch(PacketChatException e){
@@ -48,7 +55,7 @@ public class ServiceTelnet extends SocketWorker {
 
                 new ClientCommand(this, command, args);
             }else{
-                broadcastMessage(line);
+                sendMessage(line);
             }
             
         }
@@ -58,22 +65,29 @@ public class ServiceTelnet extends SocketWorker {
         try{
             
             initStreams();
-
+            new ServerTelnetPacketHandler(this);
             mainLoop();
 
 
-        }catch(IOException e){
-            Logger.e(e.getMessage());
-        }
+        }catch(IOException e){}
 
         closeUpstreamSocket();
 
         WorkerManager.getInstance().remove(this);
     }
 
+    public InputStream getUpstreamInput(){
+        return upstreamInput;
+    }
+
+    public PrintStream getOutput(){
+        return output;
+    }
+
     public String getDescription() {
         return String.format("service telnet in %s", socket.getRemoteSocketAddress().toString());
     }
+
 
     private void closeUpstreamSocket(){
         if (upstreamSocket!=null && !upstreamSocket.isClosed()){

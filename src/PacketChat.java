@@ -5,9 +5,19 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 public class PacketChat {
+    public final static byte AUTH =               (byte)0x00;
+    public final static byte CHALLENGE =          (byte)0x01;
+    public final static byte EXIT =               (byte)0x02;
+    public final static byte SEND_MSG =           (byte)0x03;
+    public final static byte LIST_USERS =         (byte)0x04;
+    public final static byte FILE_INIT =          (byte)0x05;
+    public final static byte FILE_DATA =          (byte)0x06;
+    public final static byte FILE_OVER =          (byte)0x07;
+    public final static byte HELLO =              (byte)0xFF;
 
-    public final static byte STATUS_SUCCESS=0;
-    public final static byte STATUS_ERROR=1;
+    public final static byte STATUS_SUCCESS=      (byte)0x00;
+    public final static byte STATUS_ERROR=        (byte)0x01;
+
 
     private final static int HEADER_SIZE=8;
     private final static int MAX_DATA_SIZE=0x100000;
@@ -18,11 +28,12 @@ public class PacketChat {
     private byte param;
     private ArrayList<byte[]> fields=new ArrayList<>();
 
-    public void receive(InputStream stream) throws PacketChatException{
+    public PacketChat(InputStream stream) throws PacketChatException{
         
         byte[] headerBytes=new byte[HEADER_SIZE];
         try{
-            stream.read(headerBytes);
+            int bytesRead=stream.read(headerBytes);
+            if (bytesRead!=HEADER_SIZE) throw new IOException();
         }catch(IOException e){
             throw new PacketChatException("Cannot read packet header");
         }
@@ -65,6 +76,12 @@ public class PacketChat {
             fields.add(field);
         }
         
+    }
+
+    @Override
+    public String toString(){
+        return String.format("PacketChat<command=%d|status=%d|param=%d|flag=%d|fields=%d>", 
+                getCommand(),getStatus(),getParam(),getFlag(),getFieldsNumber());
     }
 
     public void send(OutputStream stream) throws PacketChatException{
@@ -138,6 +155,10 @@ public class PacketChat {
 
     public byte[] getField(int index){
         return fields.get(index);
+    }
+
+    public byte[] replaceField(int index,byte[] value){
+        return fields.set(index,value);
     }
 
     public byte[] removeField(int index){

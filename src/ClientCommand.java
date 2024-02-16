@@ -6,7 +6,7 @@ public class ClientCommand {
                 break;
             default:
                 //server side command
-                client.broadcastMessage(args);
+                client.sendMessage(args);
         }
     }
 }
