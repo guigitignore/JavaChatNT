@@ -44,6 +44,58 @@ public class ServiceTelnet extends SocketWorker {
         }
     }
 
+    public boolean sendLogin(String username,String password){
+        boolean status;
+        PacketChat packet;
+        
+        try{
+            PacketChatFactory.createLoginPacket(username).send(upstreamOutput);
+            packet=new PacketChat(upstreamInput);
+
+            Logger.i("CHALLENGE  "+packet.toString());
+
+            if (packet.getCommand()!=PacketChat.CHALLENGE){
+                throw new PacketChatException("Expected challenge packet as response");
+            }
+            
+
+            PacketChatFactory.createChallengePacket(password.getBytes()).send(upstreamOutput);
+            packet=new PacketChat(upstreamInput);
+
+            Logger.i("AUTH "+packet.toString());
+
+            if (packet.getCommand()!=PacketChat.AUTH){
+                throw new PacketChatException("Expected auth packet as response");
+            }
+
+            switch (packet.getStatus()) {
+                case PacketChat.STATUS_SUCCESS:
+                    status=true;
+                    break;
+                case PacketChat.STATUS_ERROR:
+                    //the server can send error message
+                    int fieldsNumber=packet.getFieldsNumber();
+                    if (fieldsNumber>0){
+                        for (int i=0;i<fieldsNumber;i++){
+                            output.println("Error: "+new String(packet.getField(i)));
+                        }
+                    }else{
+                        output.println("Please retry");
+                    }
+                    status=false;
+                    break;
+
+                default:
+                    throw new PacketChatException("Unknown auth status");
+            }
+            
+
+        }catch(PacketChatException e){
+            status=false;
+        }
+        return status;
+    }
+
     private void mainLoop() throws IOException{
         String line;
         while (!socket.isClosed() && (line=input.readLine())!=null){
@@ -61,10 +113,24 @@ public class ServiceTelnet extends SocketWorker {
         }
     }
 
+    public void login() throws IOException{
+        boolean status=false;
+
+        while(!status){
+            output.print("username: ");
+            String username=input.readLine();
+            output.print("password:");
+            String password=input.readLine();
+            if (username==null || password==null) throw new IOException("null field");
+            status=sendLogin(username, password);   
+        }
+    }
+
     public void run(){
         try{
             
             initStreams();
+            login();
             new ServerTelnetPacketHandler(this);
             mainLoop();
 

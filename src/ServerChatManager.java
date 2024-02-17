@@ -28,7 +28,7 @@ public class ServerChatManager {
     }
 
     public boolean register(ServiceChat user){
-        return connectedUsers.putIfAbsent(user.getName(), user)==null;
+        return connectedUsers.putIfAbsent(user.getUserName(), user)==null;
     }
 
     public boolean remove(ServiceChat user){

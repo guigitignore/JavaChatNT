@@ -7,5 +7,9 @@ public class RSAUser extends User{
     public String getTypeName() {
         return "RSA";
     }
+
+    public IChallenge getChallenge() {
+        return new RSAChallenge(this);
+    }
     
 }

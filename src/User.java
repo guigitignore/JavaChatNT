@@ -1,4 +1,6 @@
 public abstract class User {
+    public final static String DEFAULT_TAG="USER";
+
     protected byte[] key;
     protected String name;
     private String tag;
@@ -10,10 +12,12 @@ public abstract class User {
     }
 
     public User(String name,byte[] key){
-        this(name,key,"USER");
+        this(name,key,DEFAULT_TAG);
     }
 
     public abstract String getTypeName();
+
+    public abstract IChallenge getChallenge();
 
     public byte[] getKey() {
         return key;

@@ -129,8 +129,8 @@ public class PacketChat {
         return status;
     }
 
-    public void setFlag(byte status){
-        this.status=status;
+    public void setFlag(byte flag){
+        this.flag=flag;
     }
 
     public byte getFlag(){

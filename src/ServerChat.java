@@ -5,6 +5,22 @@ public class ServerChat extends ServerSocketWorker{
     
     public final static int SERVER_CHAT_PORT=1234;
 
+    public ServerChat(int port,String...allowedTags){
+        super();
+    }
+
+    public ServerChat(String...allowedTags){
+        this(SERVER_CHAT_PORT,allowedTags);
+    }
+
+    public ServerChat(int port){
+        this(port,User.DEFAULT_TAG);
+    }
+
+    public ServerChat(){
+        this(SERVER_CHAT_PORT);
+    }
+
     public int getPort(){
         return SERVER_CHAT_PORT;
     }

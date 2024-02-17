@@ -33,7 +33,7 @@ public class PacketChatFactory{
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.CHALLENGE);
-        packet.addField(challenge);
+        if (challenge!=null) packet.addField(challenge);
         return packet;
     }
 
