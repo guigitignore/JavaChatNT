@@ -2,9 +2,27 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public abstract class ServerSocketWorker extends Thread implements IWorker{
-    protected ServerSocket server;
+    private ServerSocket server;
+    private int port;
+    private Object[] args;
 
-    public abstract int getPort();
+    public ServerSocketWorker(int port,Object...args){
+        this.port=port;
+        this.args=args;
+        WorkerManager.getInstance().registerAndStart(this);
+    }
+
+    public ServerSocket getServer(){
+        return server;
+    }
+
+    public Object[] getArgs(){
+        return args;
+    }
+
+    public int getPort(){
+        return port;
+    }
 
     public boolean getStatus(){
         boolean status;
@@ -18,7 +36,7 @@ public abstract class ServerSocketWorker extends Thread implements IWorker{
 
     public void run(){
         try{
-            server=new ServerSocket(getPort());
+            server=new ServerSocket(port);
         }catch(IOException e){
             Logger.e(e.getMessage());
             server=null;

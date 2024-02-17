@@ -12,9 +12,5 @@ public class RSAChallenge implements IChallenge{
     public boolean submit(byte[] response) {
         return true;
     }
-
-    public User getUser() {
-        return user;
-    }
     
 }

@@ -5,7 +5,7 @@ public class PacketChatSanitizer {
         this.user=user;
     }
 
-    private void logoutFilter(PacketChat packet) throws PacketChatException{
+    public void logoutSanitize(PacketChat packet) throws PacketChatException{
         switch(packet.getCommand()){
             case PacketChat.AUTH:
                 if (packet.getFieldsNumber()==0){
@@ -22,14 +22,14 @@ public class PacketChatSanitizer {
         }
     }
 
-    private void loginFilter(PacketChat packet) throws PacketChatException{
+    public void loginSanitize(PacketChat packet) throws PacketChatException{
         switch(packet.getCommand()){
             case PacketChat.SEND_MSG:
                 int fieldsNumber=packet.getFieldsNumber();
                 if (fieldsNumber<2){
                     throw new PacketChatException("Insuficiant arguments number");
                 }
-                packet.replaceField(0, user.getUserName().getBytes());
+                packet.replaceField(0, user.getUser().getName().getBytes());
                 break;
             default:
                 throw new PacketChatException("Unknown packet type");
@@ -37,10 +37,10 @@ public class PacketChatSanitizer {
     }
 
     public void sanitize(PacketChat packet) throws PacketChatException{
-        if (user.getUserName()==null){
-            logoutFilter(packet);
+        if (user.getUser()==null){
+            logoutSanitize(packet);
         }else{
-            loginFilter(packet);
+            loginSanitize(packet);
         }
     }
 }

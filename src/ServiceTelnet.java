@@ -19,8 +19,8 @@ public class ServiceTelnet extends SocketWorker {
     }
 
     private void initStreams() throws IOException{
-        input=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        output=new PrintStream(socket.getOutputStream());
+        input=new BufferedReader(new InputStreamReader(getSocket().getInputStream()));
+        output=new PrintStream(getSocket().getOutputStream());
 
         upstreamSocket=new Socket("localhost",ServerChat.SERVER_CHAT_PORT);
         upstreamInput=upstreamSocket.getInputStream();
@@ -98,7 +98,7 @@ public class ServiceTelnet extends SocketWorker {
 
     private void mainLoop() throws IOException{
         String line;
-        while (!socket.isClosed() && (line=input.readLine())!=null){
+        while (!getSocket().isClosed() && (line=input.readLine())!=null){
             if (line.startsWith("/")){
                 StringTokenizer tokens=new StringTokenizer(line," ");
 
@@ -107,7 +107,7 @@ public class ServiceTelnet extends SocketWorker {
 
                 new ClientCommand(this, command, args);
             }else{
-                sendMessage(line);
+                if (!line.isEmpty()) sendMessage(line);
             }
             
         }
@@ -151,7 +151,7 @@ public class ServiceTelnet extends SocketWorker {
     }
 
     public String getDescription() {
-        return String.format("service telnet in %s", socket.getRemoteSocketAddress().toString());
+        return String.format("service telnet in %s", getSocket().getRemoteSocketAddress().toString());
     }
 
 

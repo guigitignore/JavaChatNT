@@ -27,12 +27,23 @@ public class ServerChatManager {
         return userDatabase;
     }
 
+    public boolean isConnected(String username){
+        return connectedUsers.containsKey(username);
+    }
+
     public boolean register(ServiceChat user){
-        return connectedUsers.putIfAbsent(user.getUserName(), user)==null;
+        return connectedUsers.putIfAbsent(user.getUser().getName(), user)==null;
     }
 
     public boolean remove(ServiceChat user){
-        return connectedUsers.remove(user.getUserName(),user);
+        boolean status;
+        User infos=user.getUser();
+        if (infos==null){
+            status=false;
+        }else{
+            status=connectedUsers.remove(infos.getName(),user);
+        }
+        return status;
     }
 
     public Collection<ServiceChat> getConnectedUsers(){

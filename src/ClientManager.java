@@ -28,11 +28,11 @@ public class ClientManager extends SocketWorker{
         OutputStream output=null;
 
         try{
-            output=socket.getOutputStream();
+            output=getSocket().getOutputStream();
             MultipleOutputStream.getInstance().add(output);
             sharedPrintStream=new PrintStream(MultipleOutputStream.getInstance());
             localPrintStream=new PrintStream(output);
-            BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            BufferedReader input=new BufferedReader(new InputStreamReader(getSocket().getInputStream()));
 
             localPrintStream.println("Welcome to admin prompt (type /help to see available commands):");
 
@@ -54,7 +54,7 @@ public class ClientManager extends SocketWorker{
     }
 
     public String getDescription() {
-        return String.format("manager client in %s", socket.getRemoteSocketAddress().toString());
+        return String.format("manager client in %s", getSocket().getRemoteSocketAddress().toString());
     }
     
 }

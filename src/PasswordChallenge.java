@@ -14,9 +14,5 @@ public class PasswordChallenge implements IChallenge{
     public boolean submit(byte[] response) {
         return Arrays.equals(user.getKey(), response);
     }
-
-    public User getUser() {
-        return user;
-    }
     
 }

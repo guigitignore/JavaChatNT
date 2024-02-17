@@ -4,9 +4,10 @@ import java.net.Socket;
 public class ServerChat extends ServerSocketWorker{
     
     public final static int SERVER_CHAT_PORT=1234;
+    private String[] tags;
 
     public ServerChat(int port,String...allowedTags){
-        super();
+        super(port,(Object[])allowedTags);
     }
 
     public ServerChat(String...allowedTags){
@@ -21,24 +22,25 @@ public class ServerChat extends ServerSocketWorker{
         this(SERVER_CHAT_PORT);
     }
 
-    public int getPort(){
-        return SERVER_CHAT_PORT;
-    }
-
     public String getDescription(){
         return "ServerChat";
     }
 
+    public String[] getTags(){
+        return tags;
+    }
+
     public void run(){
         super.run();
+        this.tags=(String[])getArgs();
 
-        if (server!=null){
+        if (getServer()!=null){
             Logger.i(String.format("Server Chat listening on port %d...", getPort()));
 
             while (true){
                 try{
-                    Socket client=server.accept();
-                    new ServiceChat(client);
+                    Socket client=getServer().accept();
+                    new ServiceChat(client,this);
                 }catch(IOException e){
                     break;
                 }
