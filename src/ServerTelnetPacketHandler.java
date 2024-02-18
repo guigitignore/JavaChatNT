@@ -26,6 +26,8 @@ public class ServerTelnetPacketHandler extends Thread implements IWorker{
             }
         }
         WorkerManager.getInstance().remove(this);
+        //trigger parent cancel
+        cancel();
     }
 
     private void handlePacket(PacketChat packet){

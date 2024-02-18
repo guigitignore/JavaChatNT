@@ -2,12 +2,29 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 
 public class AdminCommand {
+    private void sendTaggedMessage(String tag,String format,Object...args) throws IOException{
+        String message=String.format(format,args);
+
+        for (ServiceChat user:ServerChatManager.getInstance().getConnectedUsers()){
+            if (user.getUser().getTag().equals(tag)){
+                user.getPacketInterface().sendMessage(message);
+            }
+        }
+    }
+
+    private void sendAdminMessage(String message,Object...args) throws IOException{
+        sendTaggedMessage(User.ADMIN_TAG, message, args);
+    }
+
     public AdminCommand(ServiceChat client,String command,String args) throws IOException{
+        StringBuilder builder;
+        int i;
+
         switch (command){
             case "ps":
-                StringBuilder builder=new StringBuilder();
+                builder=new StringBuilder();
                 builder.append("Processes running on the server:\n");
-                int i=0;
+                i=0;
                 for (IWorker worker:WorkerManager.getInstance().getWorkers()){
                     builder.append(String.format("%d - %s - %b\n", i,worker.getDescription(),worker.getStatus()));
                     i++;
@@ -21,14 +38,30 @@ public class AdminCommand {
                 }catch(NumberFormatException e){}
                 break;
             case "shutdown":
+                sendAdminMessage("%s shutdown the server...",client.getUser().getName());
                 WorkerManager.getInstance().cancelAll();
                 break;
             case "wall":
-                for (ServiceChat user:ServerChatManager.getInstance().getConnectedUsers()){
-                    if (user.getUser().getTag().equals(User.ADMIN_TAG)){
-                        user.getPacketInterface().sendMessage(args);
-                    }
+                sendAdminMessage(args);
+                break;
+            case "kick":
+                ServiceChat user=ServerChatManager.getInstance().getConnectedUser(args);
+                if (user==null){
+                    client.getPacketInterface().sendFormattedMessage("user \"%s\" does not seem to be connected",args);
+                }else{
+                    user.cancel();
+                    client.getPacketInterface().sendFormattedMessage("user \"%s\" has been kicked",args);
                 }
+                break;
+            case "ls":
+                builder=new StringBuilder();
+                builder.append("Currently connected users:\n");
+                i=1;
+                for (ServiceChat u:ServerChatManager.getInstance().getConnectedUsers()){
+                    builder.append(String.format("%d - %s - %s - %s\n", i,u.getUser().getName(),u.getUser().getTypeName(),u.getUser().getTag()));
+                    i++;
+                }
+                client.getPacketInterface().sendMessage(builder.toString());
                 break;
             case "adduser":
                 StringTokenizer tokens=new StringTokenizer(args," ");
@@ -40,6 +73,9 @@ public class AdminCommand {
 
                 ServerChatManager.getInstance().getDataBase().addUser(new PasswordUser(username, password));
                 client.getPacketInterface().sendMessage("The command has been executed");
+                break;
+            default:
+                client.getPacketInterface().sendFormattedMessage("The command \"%s\" does not exist",command);
                 break;
         }
     }
