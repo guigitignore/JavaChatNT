@@ -16,6 +16,5 @@ class Main{
             
         }));
         
-        //WorkerManager.getInstance().registerAndStart(new LocalClientManager());
     }
 }

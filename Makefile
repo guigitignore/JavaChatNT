@@ -47,6 +47,7 @@ $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
 $(OUT): $(OBJ) $(OUT_DIR)
 	@echo "Creating jar $@..."
 	@cd $(BUILD_DIR) && $(JAR) cvfm ../$(OUT) ../$(MANIFEST) *.class
+	@cp $(BOUNCY_CASTLE) $(OUT_DIR)
 
 clean:
 	@echo "Cleaning Build"
@@ -59,4 +60,4 @@ runjar: $(OUT)
 	@$(JAVA) -jar $(OUT_DIR)/$(JARFILE)
 
 run: $(OBJ)
-	@$(JAVA) -cp $(BUILD_DIR) Main
+	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main
