@@ -1,3 +1,4 @@
+import java.io.IOException;
 
 public class ServerTelnetPacketHandler extends Thread implements IWorker{
     private ServiceTelnet client;
@@ -19,8 +20,8 @@ public class ServerTelnetPacketHandler extends Thread implements IWorker{
     public void run(){
         while(true){
             try{
-                handlePacket(new PacketChat(client.getUpstreamInput()));
-            }catch(PacketChatException e){
+                handlePacket(client.getPacketInterface().getPacket());
+            }catch(IOException e){
                 break;
             }
         }

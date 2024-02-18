@@ -3,27 +3,18 @@ import java.net.Socket;
 
 public class ServerChat extends ServerSocketWorker{
     
-    public final static int SERVER_CHAT_PORT=1234;
     private String[] tags;
 
     public ServerChat(int port,String...allowedTags){
         super(port,(Object[])allowedTags);
     }
 
-    public ServerChat(String...allowedTags){
-        this(SERVER_CHAT_PORT,allowedTags);
-    }
-
     public ServerChat(int port){
-        this(port,User.DEFAULT_TAG);
-    }
-
-    public ServerChat(){
-        this(SERVER_CHAT_PORT);
+        this(port,User.USER_TAG);
     }
 
     public String getDescription(){
-        return "ServerChat";
+        return "ServerChat on port "+getPort();
     }
 
     public String[] getTags(){

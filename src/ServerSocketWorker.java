@@ -16,7 +16,7 @@ public abstract class ServerSocketWorker extends Thread implements IWorker{
         return server;
     }
 
-    public Object[] getArgs(){
+    protected Object[] getArgs(){
         return args;
     }
 

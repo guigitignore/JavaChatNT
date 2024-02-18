@@ -10,89 +10,78 @@ import java.util.StringTokenizer;
 public class ServiceTelnet extends SocketWorker {
     private BufferedReader input;
     private PrintStream output;
-    private InputStream upstreamInput;
-    private OutputStream upstreamOutput;
-    private Socket upstreamSocket;
 
-    public ServiceTelnet(Socket socket) {
-        super(socket);
+    private PacketChatInterface packetInterface=null;
+
+    private ServerTelnet server;
+
+    public ServiceTelnet(Socket socket,ServerTelnet server) {
+        super(socket,server);
     }
 
     private void initStreams() throws IOException{
         input=new BufferedReader(new InputStreamReader(getSocket().getInputStream()));
         output=new PrintStream(getSocket().getOutputStream());
 
-        upstreamSocket=new Socket("localhost",ServerChat.SERVER_CHAT_PORT);
-        upstreamInput=upstreamSocket.getInputStream();
-        upstreamOutput=upstreamSocket.getOutputStream();
+        Socket upstreamSocket=new Socket(server.getUpstreamHost(),server.getUpstreamPort());
+        packetInterface=new PacketChatInterface(upstreamSocket);
+
     }
 
-    public BufferedReader getInputStream(){
+    public BufferedReader getInput(){
         return input;
     }
 
-    public PrintStream getOutputStream(){
+    public PacketChatInterface getPacketInterface(){
+        return packetInterface;
+    }
+
+    public PrintStream getOutput(){
         return output;
     }
 
-    public void sendMessage(String message,String... dests){
-        PacketChat outgoing=PacketChatFactory.createMessagePacket("inconito", message,dests);
-        try{
-            outgoing.send(upstreamOutput);
-        }catch(PacketChatException e){
-            output.println("Cannot send message");
-        }
+    public ServerTelnet getServer(){
+        return server;
     }
 
-    public boolean sendLogin(String username,String password){
-        boolean status;
+    public boolean sendLogin(String username,String password) throws IOException{
+        boolean status=false;
         PacketChat packet;
         
-        try{
-            PacketChatFactory.createLoginPacket(username).send(upstreamOutput);
-            packet=new PacketChat(upstreamInput);
+        packetInterface.sendUsername(username);
+        packet=packetInterface.getPacket();
 
-            Logger.i("CHALLENGE  "+packet.toString());
+        Logger.i("CHALLENGE  "+packet.toString());
 
-            if (packet.getCommand()!=PacketChat.CHALLENGE){
-                throw new PacketChatException("Expected challenge packet as response");
-            }
-            
-
-            PacketChatFactory.createChallengePacket(password.getBytes()).send(upstreamOutput);
-            packet=new PacketChat(upstreamInput);
+        if (packet.getCommand()==PacketChat.CHALLENGE){
+            packetInterface.sendPassword(password);
+            packet=packetInterface.getPacket();
 
             Logger.i("AUTH "+packet.toString());
 
-            if (packet.getCommand()!=PacketChat.AUTH){
-                throw new PacketChatException("Expected auth packet as response");
-            }
-
-            switch (packet.getStatus()) {
-                case PacketChat.STATUS_SUCCESS:
-                    status=true;
-                    break;
-                case PacketChat.STATUS_ERROR:
-                    //the server can send error message
-                    int fieldsNumber=packet.getFieldsNumber();
-                    if (fieldsNumber>0){
-                        for (int i=0;i<fieldsNumber;i++){
-                            output.println("Error: "+new String(packet.getField(i)));
+            if (packet.getCommand()==PacketChat.AUTH){
+                switch (packet.getStatus()) {
+                    case PacketChat.STATUS_SUCCESS:
+                        status=true;
+                        break;
+                    case PacketChat.STATUS_ERROR:
+                        //the server can send error message
+                        int fieldsNumber=packet.getFieldsNumber();
+                        if (fieldsNumber>0){
+                            for (int i=0;i<fieldsNumber;i++){
+                                output.println("Error: "+new String(packet.getField(i)));
+                            }
+                        }else{
+                            output.println("Please retry");
                         }
-                    }else{
-                        output.println("Please retry");
-                    }
-                    status=false;
-                    break;
-
-                default:
-                    throw new PacketChatException("Unknown auth status");
+                        status=false;
+                        break;
+    
+                }
             }
             
-
-        }catch(PacketChatException e){
-            status=false;
         }
+        
         return status;
     }
 
@@ -107,7 +96,7 @@ public class ServiceTelnet extends SocketWorker {
 
                 new ClientCommand(this, command, args);
             }else{
-                if (!line.isEmpty()) sendMessage(line);
+                if (!line.isEmpty()) packetInterface.sendMessage(line);
             }
             
         }
@@ -127,6 +116,8 @@ public class ServiceTelnet extends SocketWorker {
     }
 
     public void run(){
+        this.server=(ServerTelnet)getArgs()[0];
+
         try{
             
             initStreams();
@@ -142,23 +133,15 @@ public class ServiceTelnet extends SocketWorker {
         WorkerManager.getInstance().remove(this);
     }
 
-    public InputStream getUpstreamInput(){
-        return upstreamInput;
-    }
-
-    public PrintStream getOutput(){
-        return output;
-    }
-
     public String getDescription() {
         return String.format("service telnet in %s", getSocket().getRemoteSocketAddress().toString());
     }
 
 
     private void closeUpstreamSocket(){
-        if (upstreamSocket!=null && !upstreamSocket.isClosed()){
+        if (packetInterface!=null){
             try{
-                upstreamSocket.close();
+                packetInterface.close();
             }catch(IOException e){}
         }
     }

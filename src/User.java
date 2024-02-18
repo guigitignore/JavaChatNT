@@ -1,5 +1,6 @@
 public abstract class User {
-    public final static String DEFAULT_TAG="USER";
+    public final static String USER_TAG="USER";
+    public final static String ADMIN_TAG="ADMIN";
 
     protected byte[] key;
     protected String name;
@@ -12,7 +13,7 @@ public abstract class User {
     }
 
     public User(String name,byte[] key){
-        this(name,key,DEFAULT_TAG);
+        this(name,key,USER_TAG);
     }
 
     public abstract String getTypeName();

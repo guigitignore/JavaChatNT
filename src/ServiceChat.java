@@ -7,37 +7,21 @@ import java.util.concurrent.BlockingQueue;
 
 
 public class ServiceChat extends SocketWorker{
-    private InputStream input;
-    private OutputStream output;
     private User user=null;
     private PacketChatSanitizer sanitizer;
     private ServerChat server;
+    private PacketChatInterface packetInterface;
 
     public ServiceChat(Socket socket,ServerChat server) {
         super(socket,server);
     }
 
-    private void initStreams() throws IOException{
-        input=getSocket().getInputStream();
-        output=getSocket().getOutputStream();
-    }
-
-    private PacketChat getPacket() throws IOException{
-        PacketChat packet;
-        try{
-            packet=new PacketChat(input);
-        }catch(PacketChatException e){
-            throw new IOException(e.getMessage());
-        }
-        return packet;
+    public PacketChatInterface getPacketInterface(){
+        return packetInterface;
     }
 
     public User getUser(){
         return user;
-    }
-
-    public boolean isConnected(){
-        return user!=null;
     }
 
     public ServerChat getServer(){
@@ -49,7 +33,7 @@ public class ServiceChat extends SocketWorker{
         BlockingQueue<PacketChat> queue=ServerChatManager.getInstance().getPacketQueue();
 
         while (true){
-            packet=getPacket();
+            packet=packetInterface.getPacket();
             try{
                 sanitizer.loginSanitize(packet);
             }catch(PacketChatException e){
@@ -65,70 +49,71 @@ public class ServiceChat extends SocketWorker{
         }
     }
 
-    public OutputStream getOutputStream(){
-        return output;
-    }
-
     private void loginLoop() throws IOException{
         PacketChat packet;
         IChallenge challenge=null;
         String username=null;
         User selectedUser;
 
-        while (!isConnected()){
-            packet=getPacket();
+        while (this.user==null){
+            packet=packetInterface.getPacket();
             try{
                 sanitizer.logoutSanitize(packet);
             }catch(PacketChatException e){
                 Logger.w("Packet dropped: "+packet + " -> " + e.getMessage());
                 continue;
             }
-            try{
-                switch(packet.getCommand()){
-                    case PacketChat.AUTH:
-                        username=new String(packet.getField(0));
-                        selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
-        
-                        if (selectedUser==null){
-                            challenge=new RegisterChallenge(username);
+            switch(packet.getCommand()){
+                case PacketChat.AUTH:
+                    username=new String(packet.getField(0));
+                    selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
+    
+                    if (selectedUser==null){
+                        challenge=new RegisterChallenge(username);
+                    }else{
+                        challenge=selectedUser.getChallenge();
+                    }
+    
+                    packetInterface.sendChallenge(challenge.get());
+                    break;
+    
+                case PacketChat.CHALLENGE:
+                    byte[] response=packet.getField(0);
+    
+                    if (challenge!=null && challenge.submit(response)){        
+                        if (ServerChatManager.getInstance().isConnected(username)){
+                            packetInterface.sendAuthFailure("logged in another location");
+                            
                         }else{
-                            challenge=selectedUser.getChallenge();
-                        }
-        
-                        PacketChatFactory.createChallengePacket(challenge.get()).send(output);
-                        break;
-        
-                    case PacketChat.CHALLENGE:
-                        byte[] response=packet.getField(0);
-                        PacketChat responsePacket;
-        
-                        if (challenge!=null && challenge.submit(response)){        
-                            if (ServerChatManager.getInstance().isConnected(username)){
-                                responsePacket=PacketChatFactory.createAuthPacket(false,"logged in another location");
-                                
+                            selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
+                            if (Arrays.asList(getServer().getTags()).contains(selectedUser.getTag())){
+                                this.user=selectedUser;
+                                ServerChatManager.getInstance().register(this);
+                                packetInterface.sendAuthSuccess();
                             }else{
-                                selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
-                                if (Arrays.asList(getServer().getTags()).contains(selectedUser.getTag())){
-                                    this.user=selectedUser;
-                                    ServerChatManager.getInstance().register(this);
-                                    responsePacket=PacketChatFactory.createAuthPacket(true);
-                                }else{
-                                    responsePacket=PacketChatFactory.createAuthPacket(false,"Unauthorized connection");
-                                }
+                                packetInterface.sendAuthFailure("Unauthorized connection");
                             }
-                        }else{
-                            responsePacket=PacketChatFactory.createAuthPacket(false,"challenge failed");
                         }
-                        //clear challenge so it cannot be used again
-                        challenge=null;
-                        username=null;
+                    }else{
+                        packetInterface.sendAuthFailure("challenge failed");
+                    }
+                    //clear challenge so it cannot be used again
+                    challenge=null;
+                    username=null;
 
-                        responsePacket.send(output);
-                        break;
-                }
-            }catch(PacketChatException e){
-                throw new IOException(e.getMessage());
+                    break;
             }
+        }
+    }
+
+    private void welcome() throws IOException{
+        switch(user.getTag()){
+            case User.ADMIN_TAG:
+                packetInterface.sendMessage("Welcome to admin prompt (type /help to see available commands):");
+                break;
+            case User.USER_TAG:
+                packetInterface.sendMessage("Welcome to the server!");
+                break;
         }
     }
 
@@ -136,9 +121,10 @@ public class ServiceChat extends SocketWorker{
         this.server=(ServerChat)getArgs()[0];
 
         try{
-            initStreams();
+            packetInterface=new PacketChatInterface(getSocket());
             sanitizer=new PacketChatSanitizer(this);
             loginLoop();
+            welcome();
             mainloop();
 
         }catch(IOException e){}

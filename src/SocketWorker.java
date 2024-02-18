@@ -11,7 +11,7 @@ public abstract class SocketWorker extends Thread implements IWorker{
         WorkerManager.getInstance().registerAndStart(this);
     }
 
-    public Object[] getArgs(){
+    protected Object[] getArgs(){
         return args;
     }
 

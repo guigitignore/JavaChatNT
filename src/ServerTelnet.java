@@ -1,22 +1,36 @@
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Arrays;
 
 public class ServerTelnet extends ServerSocketWorker{
-    public final static int SERVER_TELNET_PORT=2345;
+    private String upstreamHost;
+    private int upStreamPort;
 
-    public ServerTelnet(){
-        super(SERVER_TELNET_PORT,1);
+    public ServerTelnet(int port,String upstreamHost,int upstreamPort){
+        super(port,upstreamHost,upstreamPort);
     }
 
+    public ServerTelnet(int port,int upstreamPort){
+        this(port,"localhost",upstreamPort);
+    }
+
+    public String getUpstreamHost(){
+        return upstreamHost;
+    }
+
+    public int getUpstreamPort(){
+        return upStreamPort;
+    }
+
+
     public String getDescription(){
-        return "ServerTelnet";
+        return "ServerTelnet on port "+getPort();
     }
 
     public void run(){
         super.run();
-        int t=(int)getArgs()[0];
-        Logger.i(String.format("%d", t));
+
+        upstreamHost=(String)getArgs()[0];
+        upStreamPort=(int)getArgs()[1];
 
         if (getServer()!=null){
             Logger.i(String.format("Server Telnet listening on port %d...", getPort()));
@@ -24,7 +38,7 @@ public class ServerTelnet extends ServerSocketWorker{
             while (true){
                 try{
                     Socket client=getServer().accept();
-                    new ServiceTelnet(client);
+                    new ServiceTelnet(client,this);
                 }catch(IOException e){
                     break;
                 }
