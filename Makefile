@@ -14,6 +14,7 @@ OUT_DIR=out
 
 SRC_DIR=src
 BUILD_DIR = build
+BOUNCY_CASTLE=lib/bcprov-jdk18on-177.jar
 
 # Recursive Wildcard function
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *,%,$2),$d))
@@ -41,7 +42,7 @@ $(OBJ_DIRS) $(OUT_DIR):
 
 $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
 	@echo "Compiling $<..."
-	@$(JAVAC) $< -d $(BUILD_DIR) -sourcepath $(SRC_DIR)
+	@$(JAVAC) -cp $(BOUNCY_CASTLE) $< -d $(BUILD_DIR) -sourcepath $(SRC_DIR)
 
 $(OUT): $(OBJ) $(OUT_DIR)
 	@echo "Creating jar $@..."
