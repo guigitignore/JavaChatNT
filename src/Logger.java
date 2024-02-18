@@ -12,19 +12,19 @@ public class Logger {
         return DATE_FORMAT.format(new Date());
     }
 
-    private static void log(String level,String message){
-        System.out.println(getTime()+" ["+ level+"] (" + getCallerName()+") "+ message);
+    private static void log(String level,String message,Object...args){
+        System.out.println(getTime()+" ["+ level+"] (" + getCallerName()+") "+ String.format(message, args));
     }
 
-    public static void i(String info){
-        log("INFO", info);
+    public static void i(String format,Object...args){
+        log("INFO", format,args);
     }
 
-    public static void w(String warning){
-        log("WARNING", warning);
+    public static void w(String format,Object...args){
+        log("WARNING", format,args);
     }
 
-    public static void e(String error){
-        log("ERROR", error);
+    public static void e(String format,Object...args){
+        log("ERROR", format,args);
     }
 }

@@ -22,10 +22,13 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createListUserPacket(){
+    public static PacketChat createListUserPacket(String...users){
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.LIST_USERS);
+        for (String user:users){    
+            packet.addField(user.getBytes());
+        }
         return packet;
     }
 

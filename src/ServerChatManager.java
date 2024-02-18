@@ -1,5 +1,6 @@
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -48,6 +49,15 @@ public class ServerChatManager {
 
     public Collection<ServiceChat> getConnectedUsers(){
         return connectedUsers.values();
+    }
+
+    public Set<String> getConnectedUsernames(){
+        return connectedUsers.keySet();
+    }
+
+    public PacketChat getListUsersPacket(){
+        Set<String> users=connectedUsers.keySet();
+        return PacketChatFactory.createListUserPacket(users.toArray(new String[users.size()]));
     }
 
     //returns null if user is not found

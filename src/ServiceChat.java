@@ -113,6 +113,8 @@ public class ServiceChat extends SocketWorker{
                 packetInterface.sendMessage("Welcome to the server!");
                 break;
         }
+        packetInterface.sendPacket(ServerChatManager.getInstance().getListUsersPacket());
+
     }
 
     public void run(){

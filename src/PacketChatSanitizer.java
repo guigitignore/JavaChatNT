@@ -31,6 +31,10 @@ public class PacketChatSanitizer {
                 }
                 packet.replaceField(0, user.getUser().getName().getBytes());
                 break;
+            case PacketChat.LIST_USERS:
+                packet.clearFields();
+                packet.addField(user.getUser().getName().getBytes());
+                break;
             default:
                 throw new PacketChatException("Unknown packet type");
         }

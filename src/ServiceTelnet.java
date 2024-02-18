@@ -120,7 +120,7 @@ public class ServiceTelnet extends SocketWorker {
             
             initStreams();
             login();
-            new ServerTelnetPacketHandler(this);
+            new ServiceTelnetPacketHandler(this);
             mainLoop();
 
 
@@ -145,7 +145,6 @@ public class ServiceTelnet extends SocketWorker {
     }
 
     public void cancel(){
-        Logger.i("cancel method called");
         super.cancel();
         closeUpstreamSocket();
     }

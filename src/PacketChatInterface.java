@@ -63,6 +63,14 @@ public class PacketChatInterface {
         sendPacket(PacketChatFactory.createAuthPacket(false, messages));
     }
 
+    public void sendListUserRequest() throws IOException{
+        sendPacket(PacketChatFactory.createListUserPacket());
+    }
+
+    public void sendListUser(String...users) throws IOException{
+        sendPacket(PacketChatFactory.createListUserPacket(users));
+    }
+
     public void close() throws IOException{
         socket.close();
     }

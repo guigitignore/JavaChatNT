@@ -74,6 +74,20 @@ public class AdminCommand {
                 ServerChatManager.getInstance().getDataBase().addUser(new PasswordUser(username, password));
                 client.getPacketInterface().sendMessage("The command has been executed");
                 break;
+            case "help":
+                builder=new StringBuilder();
+                builder.append("list of available commands:\n");
+                builder.append("/ps - list running tasks on the server\n");
+                builder.append("/kill - kill a task by its index\n");
+                builder.append("/shutdown - shutdown the server\n");
+                builder.append("/wall - send message to admin\n");
+                builder.append("/kick - kick a user\n");
+                builder.append("/ls - advanced listing of currently connected users\n");
+                builder.append("/adduser - add a user\n");
+                builder.append("/help - print help menu\n");
+
+                client.getPacketInterface().sendMessage(builder.toString());
+                break;
             default:
                 client.getPacketInterface().sendFormattedMessage("The command \"%s\" does not exist",command);
                 break;

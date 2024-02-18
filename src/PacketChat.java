@@ -29,34 +29,37 @@ public class PacketChat {
     private ArrayList<byte[]> fields=new ArrayList<>();
 
     public PacketChat(InputStream stream) throws PacketChatException{
-        
+        byte[] dataBytes;
         byte[] headerBytes=new byte[HEADER_SIZE];
-        try{
-            int bytesRead=stream.read(headerBytes);
-            if (bytesRead!=HEADER_SIZE) throw new IOException();
-        }catch(IOException e){
-            throw new PacketChatException("Cannot read packet header");
+
+        synchronized(stream){
+            try{
+                int bytesRead=stream.read(headerBytes);
+                if (bytesRead!=HEADER_SIZE) throw new IOException();
+            }catch(IOException e){
+                throw new PacketChatException("Cannot read packet header");
+            }
+            
+    
+            ByteBuffer header=ByteBuffer.wrap(headerBytes);
+    
+            setCommand(header.get());
+            setStatus(header.get());
+            setFlag(header.get());
+            setParam(header.get());
+            
+            int dataSize=header.getInt();
+            if (dataSize>MAX_DATA_SIZE) throw new PacketChatException("Data section is too big");
+    
+            dataBytes=new byte[dataSize];
+    
+            try{
+                stream.read(dataBytes);
+            }catch(IOException e){
+                throw new PacketChatException("Cannot read packet data");
+            }
         }
         
-
-        ByteBuffer header=ByteBuffer.wrap(headerBytes);
-
-        setCommand(header.get());
-        setStatus(header.get());
-        setFlag(header.get());
-        setParam(header.get());
-        
-        int dataSize=header.getInt();
-        if (dataSize>MAX_DATA_SIZE) throw new PacketChatException("Data section is too big");
-
-        byte[] dataBytes=new byte[dataSize];
-
-        try{
-            stream.read(dataBytes);
-        }catch(IOException e){
-            throw new PacketChatException("Cannot read packet data");
-        }
-
         //reset fields
         fields.clear();
         ByteBuffer data=ByteBuffer.wrap(dataBytes);
@@ -103,7 +106,9 @@ public class PacketChat {
         }
 
         try{
-            stream.write(packetBytes);
+            synchronized(stream){
+                stream.write(packetBytes);
+            }
         }catch(IOException e){
             throw new PacketChatException("Cannot send packet");
         }
@@ -163,6 +168,10 @@ public class PacketChat {
 
     public byte[] removeField(int index){
         return fields.remove(index);
+    }
+
+    public void clearFields(){
+        fields.clear();
     }
 
     public void addField(byte[] field){

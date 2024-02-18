@@ -48,7 +48,7 @@ public class ServerChatPacketHandler {
                         break;
                 }
             }catch(IOException e){
-                Logger.w(String.format("IOException during command %s executed by %s", command,sender.getUser().getName()));
+                Logger.w("IOException during command %s executed by %s", command,sender.getUser().getName());
             }
             
 
@@ -69,11 +69,28 @@ public class ServerChatPacketHandler {
         }
     }
 
+    private void listUsersPacketHandler(PacketChat packet){
+        String username=new String(packet.getField(0));
+        ServiceChat user=ServerChatManager.getInstance().getConnectedUser(username);
+
+        if (user!=null){
+            try{
+                user.getPacketInterface().sendPacket(ServerChatManager.getInstance().getListUsersPacket());
+            }catch(IOException e){
+                Logger.w("failed to send list user to %s",username);
+            }
+        }
+        
+    }
+
     public ServerChatPacketHandler(PacketChat packet){
         Logger.i("got packet "+packet);
         switch(packet.getCommand()){
             case PacketChat.SEND_MSG:
                 messagePacketHandler(packet);
+                break;
+            case PacketChat.LIST_USERS:
+                listUsersPacketHandler(packet);
                 break;
                 
         }
