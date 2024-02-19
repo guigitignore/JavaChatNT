@@ -23,7 +23,7 @@ public class RSAUser extends User{
     public RSAUser(String name,byte[] key,String tag) throws Exception{
         super(name,key,tag);
         PublicKey publicKey=importPublicKey(key);
-        Cipher cipher= Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
+        cipher= Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
         cipher.init( Cipher.ENCRYPT_MODE,publicKey );
     }
 

@@ -14,9 +14,12 @@ public class RSAChallenge implements IChallenge{
         
         Random r = new Random();
         r.nextBytes(challengeResult);
+        challengeResult[0]&=0x7F;
+        
         try{
             challenge=user.getCipher().doFinal(challengeResult);
         }catch(Exception e){
+            Logger.w("failed to generate challenge: %s",e.getMessage());
             challenge=null;
         }
         

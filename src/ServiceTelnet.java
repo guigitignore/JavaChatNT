@@ -17,6 +17,7 @@ public class ServiceTelnet extends SocketWorker {
         super(socket,server);
     }
 
+    @SuppressWarnings("resource")
     private void initStreams() throws IOException{
         input=new BufferedReader(new InputStreamReader(getSocket().getInputStream()));
         output=new PrintStream(getSocket().getOutputStream());
@@ -52,32 +53,35 @@ public class ServiceTelnet extends SocketWorker {
         Logger.i("CHALLENGE  "+packet.toString());
 
         if (packet.getCommand()==PacketChat.CHALLENGE){
-            packetInterface.sendPassword(password);
-            packet=packetInterface.getPacket();
+            if (packet.getFieldsNumber()==0){
+                packetInterface.sendPassword(password);
+                packet=packetInterface.getPacket();
 
-            Logger.i("AUTH "+packet.toString());
+                Logger.i("AUTH "+packet.toString());
 
-            if (packet.getCommand()==PacketChat.AUTH){
-                switch (packet.getStatus()) {
-                    case PacketChat.STATUS_SUCCESS:
-                        status=true;
-                        break;
-                    case PacketChat.STATUS_ERROR:
-                        //the server can send error message
-                        int fieldsNumber=packet.getFieldsNumber();
-                        if (fieldsNumber>0){
-                            for (int i=0;i<fieldsNumber;i++){
-                                output.println("Error: "+new String(packet.getField(i)));
+                if (packet.getCommand()==PacketChat.AUTH){
+                    switch (packet.getStatus()) {
+                        case PacketChat.STATUS_SUCCESS:
+                            status=true;
+                            break;
+                        case PacketChat.STATUS_ERROR:
+                            //the server can send error message
+                            int fieldsNumber=packet.getFieldsNumber();
+                            if (fieldsNumber>0){
+                                for (int i=0;i<fieldsNumber;i++){
+                                    output.println("Error: "+new String(packet.getField(i)));
+                                }
+                            }else{
+                                output.println("Please retry");
                             }
-                        }else{
-                            output.println("Please retry");
-                        }
-                        status=false;
-                        break;
-    
+                            status=false;
+                            break;
+        
+                    }
                 }
-            }
-            
+            }else{
+                output.println("RSA users are not supported from telnet");
+            } 
         }
         
         return status;
