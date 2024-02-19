@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.concurrent.BlockingQueue;
 
 
 public class ServiceChat extends SocketWorker{
@@ -28,7 +27,6 @@ public class ServiceChat extends SocketWorker{
 
     private void mainloop() throws IOException{
         PacketChat packet;
-        BlockingQueue<PacketChat> queue=ServerChatManager.getInstance().getPacketQueue();
 
         while (true){
             packet=packetInterface.getPacket();
@@ -38,12 +36,8 @@ public class ServiceChat extends SocketWorker{
                 Logger.w("Packet dropped: "+packet + " -> " + e.getMessage());
                 continue;
             }
-            try{
-                queue.put(packet);
-            }catch(InterruptedException e){
-                Logger.e("Packet cannot be queued:"+packet);
-                continue;
-            }
+            
+            ServerChatManager.getInstance().putPacket(packet);
         }
     }
 
@@ -86,8 +80,8 @@ public class ServiceChat extends SocketWorker{
                             selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
                             if (Arrays.asList(getServer().getTags()).contains(selectedUser.getTag())){
                                 this.user=selectedUser;
-                                ServerChatManager.getInstance().register(this);
                                 packetInterface.sendAuthSuccess();
+                                ServerChatManager.getInstance().register(this);
                             }else{
                                 packetInterface.sendAuthFailure("Unauthorized connection");
                             }

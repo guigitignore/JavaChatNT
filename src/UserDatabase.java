@@ -53,7 +53,7 @@ class UserDatabase{
                 }
                 
             }
-            Logger.i(String.format("Successfully import %d users (failure %d)\n",successCounter,failureCounter));
+            Logger.i("Successfully import %d users (failure %d)",successCounter,failureCounter);
             reader.close();
         }catch(IOException e){
             Logger.i("Initializing empty database");

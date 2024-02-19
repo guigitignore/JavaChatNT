@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
@@ -20,8 +21,20 @@ public class ServerChatManager {
 
     private UserDatabase userDatabase=new UserDatabase(DATABASE_FILE);
 
-    public BlockingQueue<PacketChat> getPacketQueue(){
-        return queue;
+    public PacketChat getPacket() throws IOException{
+        try{
+            return queue.take();
+        }catch(InterruptedException e){
+            throw new IOException("Cannot take packet from queue");
+        }
+    }
+
+    public float getQueueFillRate(){
+        return (queue.size())/(queue.size()+queue.remainingCapacity());
+    }
+
+    public boolean putPacket(PacketChat packet){
+        return queue.add(packet);
     }
 
     public UserDatabase getDataBase(){
@@ -29,11 +42,18 @@ public class ServerChatManager {
     }
 
     public boolean isConnected(String username){
-        return connectedUsers.containsKey(username);
+        synchronized(connectedUsers){
+            return connectedUsers.containsKey(username);
+        }
     }
 
     public boolean register(ServiceChat user){
-        return connectedUsers.putIfAbsent(user.getUser().getName(), user)==null;
+        boolean status;
+        synchronized(connectedUsers){
+            status=connectedUsers.putIfAbsent(user.getUser().getName(), user)==null;
+        }
+        if (status) sendMessage("\"%s\" is now connected",user.getUser().getName());
+        return status;
     }
 
     public boolean remove(ServiceChat user){
@@ -42,27 +62,70 @@ public class ServerChatManager {
         if (infos==null){
             status=false;
         }else{
-            status=connectedUsers.remove(infos.getName(),user);
+            synchronized(connectedUsers){
+                status=connectedUsers.remove(infos.getName(),user);
+            }
+            if (status) sendMessage("\"%s\" has disconnected",user.getUser().getName());
         }
         return status;
     }
 
     public Collection<ServiceChat> getConnectedUsers(){
-        return connectedUsers.values();
+        synchronized(connectedUsers){
+            return connectedUsers.values();
+        }
     }
 
     public Set<String> getConnectedUsernames(){
-        return connectedUsers.keySet();
+        synchronized(connectedUsers){
+            return connectedUsers.keySet();
+        }
     }
 
     public PacketChat getListUsersPacket(){
-        Set<String> users=connectedUsers.keySet();
+        Set<String> users;
+        synchronized(connectedUsers){
+            users=connectedUsers.keySet();
+        }
         return PacketChatFactory.createListUserPacket(users.toArray(new String[users.size()]));
     }
 
     //returns null if user is not found
     public ServiceChat getConnectedUser(String username){
-        return connectedUsers.get(username);
+        synchronized(connectedUsers){
+            return connectedUsers.get(username);
+        }
+    }
+
+    public void sendTaggedMessage(String tag,String format,Object...args){
+        String message=String.format(format,args);
+
+        for (ServiceChat user:ServerChatManager.getInstance().getConnectedUsers()){
+            if (user.getUser().getTag().equals(tag)){
+                try{
+                    user.getPacketInterface().sendMessage(message);
+                }catch(IOException e){
+                    Logger.w("Cannot send message to %s",user.getUser().getName());
+                }
+                
+            }
+        }
+    }
+
+    public void sendMessage(String format,Object...args){
+        String message=String.format(format,args);
+
+        for (ServiceChat user:ServerChatManager.getInstance().getConnectedUsers()){
+            try{
+                user.getPacketInterface().sendMessage(message);
+            }catch(IOException e){
+                Logger.w("Cannot send message to %s",user.getUser().getName());
+            }
+        }
+    }
+
+    public void sendAdminMessage(String message,Object...args){
+        sendTaggedMessage(User.ADMIN_TAG, message, args);
     }
 
     private ServerChatManager(){

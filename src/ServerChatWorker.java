@@ -1,4 +1,4 @@
-import java.util.concurrent.BlockingQueue;
+import java.io.IOException;
 
 class ServerChatWorker extends Thread implements IWorker{
     private static int workerCounter=0;
@@ -19,18 +19,20 @@ class ServerChatWorker extends Thread implements IWorker{
     }
 
     public void run() {
-        BlockingQueue<PacketChat> queue=ServerChatManager.getInstance().getPacketQueue();
+        ServerChatManager manager=ServerChatManager.getInstance();
+        float fillRate;
 
         while (true){
             try{
                 //load balancer
+                fillRate=manager.getQueueFillRate();
                 if (workerId==0){
-                    if (queue.remainingCapacity()<queue.size()) new ServerChatWorker();
+                    if (fillRate>0.5) new ServerChatWorker();
                 }
-                else if (queue.size()*2<queue.remainingCapacity()) break;
+                else if (fillRate<0.4) break;
                 
-                new ServerChatPacketHandler(queue.take());
-            }catch(InterruptedException e){
+                new ServerChatPacketHandler(manager.getPacket());
+            }catch(IOException e){
                 break;
             }
         }

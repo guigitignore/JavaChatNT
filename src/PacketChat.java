@@ -87,7 +87,7 @@ public class PacketChat {
                 getCommand(),getStatus(),getParam(),getFlag(),getFieldsNumber());
     }
 
-    public void send(OutputStream stream) throws PacketChatException{
+    public byte[] getBytes(){
         int fieldsSize=0;
         for (byte[] field:fields) fieldsSize+=field.length+Short.BYTES;
 
@@ -104,6 +104,12 @@ public class PacketChat {
             packet.putShort((short)field.length);
             packet.put(field);
         }
+
+        return packetBytes;
+    }
+
+    public void send(OutputStream stream) throws PacketChatException{
+        byte[] packetBytes=getBytes();
 
         try{
             synchronized(stream){
