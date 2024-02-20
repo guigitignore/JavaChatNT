@@ -1,8 +1,8 @@
-public class RegisterChallenge implements IChallenge {
+public class PasswordRegisterChallenge implements IChallenge {
     private String username;
 
 
-    public RegisterChallenge(String username){
+    public PasswordRegisterChallenge(String username){
         this.username=username;
     }
 

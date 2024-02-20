@@ -124,7 +124,7 @@ public class ServiceTelnet extends SocketWorker {
             
             initStreams();
             login();
-            new ServiceTelnetPacketHandler(this);
+            new ServiceTelnetListener(this);
             mainLoop();
 
 

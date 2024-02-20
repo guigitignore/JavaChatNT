@@ -1,9 +1,9 @@
 import java.io.IOException;
 
-public class ServiceTelnetPacketHandler extends Thread implements IWorker{
+public class ServiceTelnetListener extends Thread implements IWorker{
     private ServiceTelnet client;
 
-    public ServiceTelnetPacketHandler(ServiceTelnet client){
+    public ServiceTelnetListener(ServiceTelnet client){
         this.client=client;
         WorkerManager.getInstance().registerAndStart(this);
     }
