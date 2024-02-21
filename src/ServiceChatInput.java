@@ -1,10 +1,12 @@
 import java.util.Arrays;
+import java.util.StringTokenizer;
+import java.util.stream.IntStream;
 
 public class ServiceChatInput implements IPacketChatOutput{
     private ServiceChat client;
     private User user=null;
+    private User selectedUser=null;
     private IChallenge challenge=null;
-    private String username;
     private PacketChatSanitizer sanitizer;
 
     public ServiceChatInput(ServiceChat client){
@@ -16,65 +18,101 @@ public class ServiceChatInput implements IPacketChatOutput{
         return user;
     }
 
+    private void handleAuthPacket(PacketChat packet) throws PacketChatException{
+        String username=new String(packet.getField(0));
+        selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
 
-    private void logoutPacketHandler(PacketChat packet) throws PacketChatException{
-        User selectedUser;
-
-        switch(packet.getCommand()){
-            case PacketChat.AUTH:
-                username=new String(packet.getField(0));
-                selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
-
-                if (selectedUser==null){
-                    if (packet.getFieldsNumber()==2){
-                        challenge=new RSARegisterChallenge(username,packet.getField(1));
-                    }else{
-                        challenge=new PasswordRegisterChallenge(username);
-                    }
-                }else{
-                    challenge=selectedUser.getChallenge();
-                }
-
-                
-                break;
-
-            case PacketChat.CHALLENGE:
-                byte[] response=packet.getField(0);
-
-                if (challenge!=null && challenge.submit(response)){        
-                    if (ServerChatManager.getInstance().isConnected(username)){
-                        client.getOutput().sendAuthFailure("logged in another location");
-                    }else{
-                        selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
-                        if (Arrays.asList(client.getServer().getTags()).contains(selectedUser.getTag())){
-                            this.user=selectedUser;
-                            client.getOutput().sendAuthSuccess();
-                            ServerChatManager.getInstance().register(client);
-                        }else{
-                            client.getOutput().sendAuthFailure("Unauthorized connection");
-                        }
-                    }
-                }else{
-                    client.getOutput().sendAuthFailure("challenge failed");
-                }
-                //clear challenge so it cannot be used again
-                challenge=null;
-                username=null;
-
-                break;
+        if (selectedUser==null){
+            if (packet.getFieldsNumber()==2){
+                challenge=new RSARegisterChallenge(username,packet.getField(1));
+            }else{
+                challenge=new PasswordRegisterChallenge(username);
+            }
+        }else{
+            challenge=selectedUser.getChallenge();
         }
     }
 
-    private void loginPacketHandler(PacketChat packet) throws PacketChatException{
-        
+    private void handleChallengePacket(PacketChat packet) throws PacketChatException{
+        byte[] response=packet.getField(0);
+
+        if (challenge!=null && challenge.submit(response)){        
+            if (ServerChatManager.getInstance().isConnected(selectedUser.getName())){
+                client.getOutput().sendAuthFailure("logged in another location");
+            }else{
+                if (Arrays.asList(client.getServer().getTags()).contains(selectedUser.getTag())){
+                    this.user=this.selectedUser;
+                    client.getOutput().sendAuthSuccess();
+                    ServerChatManager.getInstance().register(client);
+                }else{
+                    client.getOutput().sendAuthFailure("Unauthorized connection");
+                }
+            }
+        }else{
+            client.getOutput().sendAuthFailure("challenge failed");
+        }
+        //clear challenge so it cannot be used again
+        challenge=null;
     }
 
-    public void putPacketChat(PacketChat packet) throws PacketChatException {
-        if (client.getUser()==null){
-            sanitizer.logoutSanitize(packet);
-            logoutPacketHandler(packet);
+    private void handleMessagePacket(PacketChat packet) throws PacketChatException{
+        String message=new String(packet.getField(1));
+
+        if (message.startsWith("/")){
+            StringTokenizer tokens=new StringTokenizer(message," ");
+            String command=tokens.nextToken().substring(1).toLowerCase();
+            String args=tokens.hasMoreTokens()?tokens.nextToken("").strip():"";
+            
+            switch (client.getUser().getTag()){
+                case User.ADMIN_TAG:
+                    new AdminCommand(client, command, args);
+                    break;
+                case User.USER_TAG:
+                    new UserCommand(client, command, args);
+                    break;
+                default:
+                    client.getOutput().sendMessage("You are not allowed to execute server commands");
+                    break;
+            }
+
         }else{
-            loginPacketHandler(packet);
+            int fieldsNumber=packet.getFieldsNumber();
+
+            if (fieldsNumber==2){
+                ServerChatManager.getInstance().getClients().toPacketChatOutput().sendPacket(packet);
+            }else{
+                ServerChatManager.getInstance().getClientsByName(IntStream.range(2, fieldsNumber).mapToObj(index -> {
+                    return new String(packet.getField(index));
+                }).toList()).toPacketChatOutput().sendPacket(packet);
+            }
+        }
+    }
+
+    private void handleListUserPacket(PacketChat packet) throws PacketChatException{
+        client.getOutput().sendPacket(ServerChatManager.getInstance().getListUsersPacket());
+    }
+
+
+    public void putPacketChat(PacketChat packet) throws PacketChatException {
+        Logger.i("got packet: %s",packet);
+        sanitizer.sanitize(packet);
+
+        switch(packet.getCommand()){
+            case PacketChat.AUTH:
+                handleAuthPacket(packet);
+                break;
+            case PacketChat.CHALLENGE:
+                handleChallengePacket(packet);
+                break;
+            case PacketChat.SEND_MSG:
+                handleMessagePacket(packet);
+                break;
+            case PacketChat.LIST_USERS:
+                handleListUserPacket(packet);
+                break;
+            default:
+                Logger.w("Cannot handle this packet: %s",packet);
+                break;
         }
     }
 }

@@ -1,12 +1,9 @@
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutput{
     public final static int CAPACITY=100;
 
     private ServiceChat client;
     private IPacketChatOutput output;
-    private BlockingQueue<PacketChat> queue=new ArrayBlockingQueue<>(CAPACITY);
+    private PacketChatQueue queue=new PacketChatQueue(CAPACITY);
 
     public ServiceChatOutput(ServiceChat client,IPacketChatOutput output){
         this.client=client;
@@ -24,11 +21,10 @@ public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutp
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
-        if (!queue.add(packet)) throw new PacketChatException("Cannot queue packet");
+        queue.putPacketChat(packet);
     }
 
     
-
     private void handlePacket(PacketChat packet) throws PacketChatException{
         
         //send packet 
@@ -39,18 +35,9 @@ public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutp
 
         while (true){
             try{
-                PacketChat packet=queue.take();
-                try{
-                    handlePacket(packet);
-                }catch(PacketChatException e){
-                    if (client.getUser()==null){
-                        Logger.w("Packet dropped on output for %s: %s",client.getDescription(),e.getMessage());
-                    }else{
-                        Logger.w("Packet dropped on output for user \"%s\" : %s",client.getUser().getName(),e.getMessage());
-                    }
-                }
-
-            }catch(InterruptedException e){
+                PacketChat packet=queue.getPacketChat();
+                handlePacket(packet);
+            }catch(PacketChatException e){
                 break;
             }
         }

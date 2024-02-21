@@ -1,14 +1,15 @@
+import java.util.Arrays;
 import java.util.Collection;
 
 public class PacketChatMulticast implements IPacketChatOutput {
-    private IPacketChatOutput[] outputs;
+    private Collection<IPacketChatOutput> outputs;
 
-    public PacketChatMulticast(IPacketChatOutput...packetChatOutputs){
+    public PacketChatMulticast(Collection<IPacketChatOutput> packetChatOutputs){
         outputs=packetChatOutputs;
     }
 
-    public PacketChatMulticast(Collection<IPacketChatOutput> packetChatOutputs){
-        this(packetChatOutputs.toArray(new IPacketChatOutput[packetChatOutputs.size()]));
+    public PacketChatMulticast(IPacketChatOutput...packetChatOutputs){
+        this(Arrays.asList(packetChatOutputs));
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {

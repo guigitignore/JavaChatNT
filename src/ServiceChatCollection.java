@@ -6,36 +6,20 @@ public class ServiceChatCollection extends ArrayList<ServiceChat> {
         super();
     }
 
-    public ServiceChatCollection(Collection<ServerChat> clients){
+    public ServiceChatCollection(Collection<ServiceChat> clients){
         super(clients);
-
     }
 
     public Collection<User> getUsers(){
-        Collection<User> result=new ArrayList<>();
-
-        for (ServiceChat client:this){
-            User user=client.getUser();
-            if (user!=null) result.add(user);
-        }
-        return result;
+        return stream().map(ServiceChat::getUser).toList();
     }
 
     public Collection<String> getUsernames(){
-        Collection<String> result=new ArrayList<>();
-        for (User user:getUsers()){
-            result.add(user.getName());
-        }
-        return result;
+        return stream().map(ServiceChat::getUser).map(User::getName).toList();
     }
 
     public Collection<IPacketChatOutput> getOutputs(){
-        Collection<IPacketChatOutput> result=new ArrayList<>();
-
-        for (ServiceChat client:this){
-            result.add(client.getOutput().getOutput());
-        }
-        return result;
+        return stream().map(ServiceChat::getOutput).map(PacketChatOutput::getInterface).toList();
     }
 
     public PacketChatOutput toPacketChatOutput(){

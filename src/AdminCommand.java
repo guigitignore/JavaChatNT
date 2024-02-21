@@ -1,11 +1,10 @@
-import java.io.IOException;
 import java.util.Base64;
 import java.util.StringTokenizer;
 
 public class AdminCommand {
     private ServiceChat client;
 
-    private void psCommand() throws IOException{
+    private void psCommand() throws PacketChatException{
         StringBuilder builder=new StringBuilder();
         builder.append("Processes running on the server:\n");
         int i=0;
@@ -13,67 +12,65 @@ public class AdminCommand {
             builder.append(String.format("%d - %s - %b\n", i,worker.getDescription(),worker.getStatus()));
             i++;
         }
-        client.getPacketInterface().sendMessage(builder.toString());
+        client.getOutput().sendMessage(builder.toString());
     }
 
-    private void killCommand(String args) throws IOException{
+    private void killCommand(String args) throws PacketChatException{
         try{
             int task=Integer.parseInt(args);
             WorkerManager.getInstance().cancel(task);
         }catch(NumberFormatException e){}
     }
 
-    private void shutdownCommand() throws IOException{
-        ServerChatManager.getInstance().sendAdminMessage("%s shutdown the server...",client.getUser().getName());
+    private void shutdownCommand() throws PacketChatException{
+        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).toPacketChatOutput().sendFormattedMessage("%s shutdown the server...",client.getUser().getName());
         WorkerManager.getInstance().cancelAll();
     }
 
-    private void wallCommand(String args) throws IOException{
-        ServerChatManager.getInstance().sendAdminMessage(args);
+    private void wallCommand(String args) throws PacketChatException{
+        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).toPacketChatOutput().sendFormattedMessage(args);
     }
 
-    private void kickCommand(String args) throws IOException{
+    private void kickCommand(String args) throws PacketChatException{
         ServiceChat user=ServerChatManager.getInstance().getConnectedUser(args);
         if (user==null){
-            client.getPacketInterface().sendFormattedMessage("user \"%s\" does not seem to be connected",args);
+            client.getOutput().sendFormattedMessage("user \"%s\" does not seem to be connected",args);
         }else{
             user.cancel();
-            client.getPacketInterface().sendFormattedMessage("user \"%s\" has been kicked",args);
+            client.getOutput().sendFormattedMessage("user \"%s\" has been kicked",args);
         }
     }
 
-    private void lsCommand() throws IOException{
+    private void lsCommand() throws PacketChatException{
         StringBuilder builder=new StringBuilder();
         builder.append("Currently connected users:\n");
-        int i=1;
-        for (ServiceChat u:ServerChatManager.getInstance().getUsers()){
-            builder.append(String.format("%d - %s - %s - %s\n", i,u.getUser().getName(),u.getUser().getTypeName(),u.getUser().getTag()));
-            i++;
-        }
-        client.getPacketInterface().sendMessage(builder.toString());
+        ServerChatManager.getInstance().getClients().stream().map(ServiceChat::getUser).forEach(user->{
+            builder.append(String.format("- %s / %s / %s\n",user.getName(),user.getTypeName(),user.getTag()));
+        });
+        client.getOutput().sendMessage(builder.toString());
     }
 
-    private void addpwduserCommand(String args) throws IOException{
+    private void addpwduserCommand(String args) throws PacketChatException{
         StringTokenizer tokens=new StringTokenizer(args," ");
         if (tokens.countTokens()!=2){
-            client.getPacketInterface().sendMessage("Expected 2 arguments");
+            client.getOutput().sendMessage("Expected 2 arguments");
         }else{
             String username=tokens.nextToken();
             String password=tokens.nextToken();
 
             if (ServerChatManager.getInstance().getDataBase().addUser(new PasswordUser(username, password))){
-                client.getPacketInterface().sendFormattedMessage("Successfully add user %s",username);
+                client.getOutput().sendFormattedMessage("Successfully add user %s",username);
             }else{
-                client.getPacketInterface().sendFormattedMessage("Failed to add user %s",username);
+                client.getOutput().sendFormattedMessage("Failed to add user %s",username);
             }
         }
     }
 
-    private void addrsauserCommand(String args) throws IOException{
+    private void addrsauserCommand(String args) throws PacketChatException{
         User user;
         StringTokenizer tokens=new StringTokenizer(args," ");
         if (tokens.countTokens()!=2){
-            client.getPacketInterface().sendMessage("Expected 2 arguments");
+            client.getOutput().sendMessage("Expected 2 arguments");
         }else{
             String username=tokens.nextToken();
             String pubKey=tokens.nextToken();
@@ -83,14 +80,14 @@ public class AdminCommand {
                 if (!ServerChatManager.getInstance().getDataBase().addUser(user)){
                     throw new Exception();
                 }
-                client.getPacketInterface().sendFormattedMessage("Successfully add user %s",username);
+                client.getOutput().sendFormattedMessage("Successfully add user %s",username);
             }catch(Exception e){
-                client.getPacketInterface().sendFormattedMessage("Failed to add user %s",username);
+                client.getOutput().sendFormattedMessage("Failed to add user %s",username);
             }
         }
     }
 
-    private void helpCommand() throws IOException{
+    private void helpCommand() throws PacketChatException{
         StringBuilder builder=new StringBuilder();
         builder.append("list of available commands:\n");
         builder.append("/ps - list running tasks on the server\n");
@@ -102,11 +99,11 @@ public class AdminCommand {
         builder.append("/addpwduser - add a password user\n");
         builder.append("/help - print help menu\n");
 
-        client.getPacketInterface().sendMessage(builder.toString());
+        client.getOutput().sendMessage(builder.toString());
     }
 
 
-    public AdminCommand(ServiceChat client,String command,String args) throws IOException{
+    public AdminCommand(ServiceChat client,String command,String args) throws PacketChatException{
         this.client=client;
 
         switch (command){
@@ -138,7 +135,7 @@ public class AdminCommand {
                 helpCommand();
                 break;
             default:
-                client.getPacketInterface().sendFormattedMessage("The command \"%s\" does not exist",command);
+                client.getOutput().sendFormattedMessage("The command \"%s\" does not exist",command);
                 break;
         }
     }

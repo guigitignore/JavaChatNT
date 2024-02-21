@@ -7,7 +7,7 @@ public class PacketChatOutput {
         this.output=output;
     }
 
-    public IPacketChatOutput getOutput(){
+    public IPacketChatOutput getInterface(){
         return output;
     }
 
