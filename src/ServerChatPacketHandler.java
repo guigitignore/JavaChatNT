@@ -56,7 +56,7 @@ public class ServerChatPacketHandler {
             int fieldsNumber=packet.getFieldsNumber();
 
             if (fieldsNumber==2){
-                for (ServiceChat client:ServerChatManager.getInstance().getConnectedUsers()){
+                for (ServiceChat client:ServerChatManager.getInstance().getUsers()){
                     sendPacket(client, packet);
                 }
             }else{

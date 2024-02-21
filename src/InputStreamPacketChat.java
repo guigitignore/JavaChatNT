@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.io.InputStream;
 
 public class InputStreamPacketChat implements IPacketChatInput {
@@ -8,13 +7,8 @@ public class InputStreamPacketChat implements IPacketChatInput {
         this.input=input;
     }
 
-    public PacketChat getPacketChat() throws IOException{
-        try{
+    public PacketChat getPacketChat() throws PacketChatException{
             return new PacketChat(input);
-        }catch(PacketChatException e){
-            throw new IOException(e.getMessage());
-        }
-        
     }
     
 }

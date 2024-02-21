@@ -46,7 +46,7 @@ public class AdminCommand {
         StringBuilder builder=new StringBuilder();
         builder.append("Currently connected users:\n");
         int i=1;
-        for (ServiceChat u:ServerChatManager.getInstance().getConnectedUsers()){
+        for (ServiceChat u:ServerChatManager.getInstance().getUsers()){
             builder.append(String.format("%d - %s - %s - %s\n", i,u.getUser().getName(),u.getUser().getTypeName(),u.getUser().getTag()));
             i++;
         }

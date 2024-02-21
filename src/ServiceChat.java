@@ -4,23 +4,24 @@ import java.net.Socket;
 
 public class ServiceChat extends SocketWorker{
     private ServerChat server;
-    private ServiceChatInput input=null;
-    private ServiceChatOutput output=null;
+    private PacketChatOutput input=null;
+    private PacketChatOutput output=null;
+    private ServiceChatInput inputServiceChat;
 
     public ServiceChat(Socket socket,ServerChat server) {
         super(socket,server);
     }
 
-    public IPacketChatOutput getInput(){
+    public PacketChatOutput getInput(){
         return input;
     }
 
-    public IPacketChatOutput getOutput(){
+    public PacketChatOutput getOutput(){
         return output;
     }
 
     public User getUser(){
-        return input.getUser();
+        return inputServiceChat.getUser();
     }
 
     public ServerChat getServer(){
@@ -28,19 +29,26 @@ public class ServiceChat extends SocketWorker{
     }
 
     public void run(){
+        PacketChat packet;
+
         this.server=(ServerChat)getArgs()[0];
         
         try{
             IPacketChatInput primaryInput=new InputStreamPacketChat(getSocket().getInputStream());
             IPacketChatOutput primaryOutput=new OutputStreamPacketChat(getSocket().getOutputStream());
-            input=new ServiceChatInput(this);
-            output=new ServiceChatOutput(this, primaryOutput);
+            inputServiceChat= new ServiceChatInput(this);
+            input=new PacketChatOutput(inputServiceChat);
+            output=new PacketChatOutput(new ServiceChatOutput(this, primaryOutput));
 
             while (true){
-                PacketChat packet=primaryInput.getPacketChat();
                 try{
-                    input.putPacketChat(packet);
-                }catch(IOException e){
+                    packet=primaryInput.getPacketChat();
+                }catch(PacketChatException e){
+                    break;
+                }
+                try{
+                    input.sendPacket(packet);
+                }catch(PacketChatException e){
                     if (getUser()==null){
                         Logger.w("Packet dropped on input for %s: %s",getDescription(),e.getMessage());
                     }else{

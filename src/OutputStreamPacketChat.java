@@ -8,10 +8,15 @@ public class OutputStreamPacketChat implements IPacketChatOutput{
         this.output=output;
     }
 
-    public void putPacketChat(PacketChat packet) throws IOException {
-        synchronized(output){
-            output.write(packet.getBytes());
+    public void putPacketChat(PacketChat packet) throws PacketChatException{
+        try{
+            synchronized(output){
+                output.write(packet.getBytes());
+            }
+        }catch(IOException e){
+            throw new PacketChatException(e.getMessage());
         }
+        
     }
     
 }

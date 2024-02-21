@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -24,30 +23,15 @@ public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutp
         return "ServiceChatOutput of"+client.getDescription();
     }
 
-    public void putPacketChat(PacketChat packet) throws IOException {
-        if (!queue.add(packet)) throw new IOException("Cannot queue packet");
+    public void putPacketChat(PacketChat packet) throws PacketChatException {
+        if (!queue.add(packet)) throw new PacketChatException("Cannot queue packet");
     }
 
-    private void logoutPacketHandler(PacketChat packet) throws IOException{
-        byte command=packet.getCommand();
-        if (command!=PacketChat.AUTH && command!=PacketChat.CHALLENGE){
-            throw new IOException(String.format("unauthorized packet for logout user: %s", packet));
-        }
-    }
+    
 
-    private void loginPacketHandler(PacketChat packet) throws IOException{
-        switch(packet.getCommand()){
-
-        }
-    }
-
-    private void handlePacket(PacketChat packet) throws IOException{
-        if (client.getUser()==null){
-            logoutPacketHandler(packet);
-        }else{
-            loginPacketHandler(packet);
-        }
-        //send packet after filtering
+    private void handlePacket(PacketChat packet) throws PacketChatException{
+        
+        //send packet 
         output.putPacketChat(packet);
     }
 
@@ -58,7 +42,7 @@ public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutp
                 PacketChat packet=queue.take();
                 try{
                     handlePacket(packet);
-                }catch(IOException e){
+                }catch(PacketChatException e){
                     if (client.getUser()==null){
                         Logger.w("Packet dropped on output for %s: %s",client.getDescription(),e.getMessage());
                     }else{

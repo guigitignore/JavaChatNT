@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.util.Arrays;
 
 public class ServiceChatInput implements IPacketChatOutput{
@@ -6,9 +5,11 @@ public class ServiceChatInput implements IPacketChatOutput{
     private User user=null;
     private IChallenge challenge=null;
     private String username;
+    private PacketChatSanitizer sanitizer;
 
     public ServiceChatInput(ServiceChat client){
         this.client=client;
+        sanitizer=new PacketChatSanitizer(client);
     }
 
     public User getUser(){
@@ -16,7 +17,7 @@ public class ServiceChatInput implements IPacketChatOutput{
     }
 
 
-    private void logoutPacketHandler(PacketChat packet) throws IOException{
+    private void logoutPacketHandler(PacketChat packet) throws PacketChatException{
         User selectedUser;
 
         switch(packet.getCommand()){
@@ -25,7 +26,11 @@ public class ServiceChatInput implements IPacketChatOutput{
                 selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
 
                 if (selectedUser==null){
-                    challenge=new PasswordRegisterChallenge(username);
+                    if (packet.getFieldsNumber()==2){
+                        challenge=new RSARegisterChallenge(username,packet.getField(1));
+                    }else{
+                        challenge=new PasswordRegisterChallenge(username);
+                    }
                 }else{
                     challenge=selectedUser.getChallenge();
                 }
@@ -38,20 +43,19 @@ public class ServiceChatInput implements IPacketChatOutput{
 
                 if (challenge!=null && challenge.submit(response)){        
                     if (ServerChatManager.getInstance().isConnected(username)){
-                        packetInterface.sendAuthFailure("logged in another location");
-                        
+                        client.getOutput().sendAuthFailure("logged in another location");
                     }else{
                         selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
-                        if (Arrays.asList(getServer().getTags()).contains(selectedUser.getTag())){
+                        if (Arrays.asList(client.getServer().getTags()).contains(selectedUser.getTag())){
                             this.user=selectedUser;
-                            packetInterface.sendAuthSuccess();
-                            ServerChatManager.getInstance().register(this);
+                            client.getOutput().sendAuthSuccess();
+                            ServerChatManager.getInstance().register(client);
                         }else{
-                            packetInterface.sendAuthFailure("Unauthorized connection");
+                            client.getOutput().sendAuthFailure("Unauthorized connection");
                         }
                     }
                 }else{
-                    packetInterface.sendAuthFailure("challenge failed");
+                    client.getOutput().sendAuthFailure("challenge failed");
                 }
                 //clear challenge so it cannot be used again
                 challenge=null;
@@ -61,12 +65,13 @@ public class ServiceChatInput implements IPacketChatOutput{
         }
     }
 
-    private void loginPacketHandler(PacketChat packet) throws IOException{
+    private void loginPacketHandler(PacketChat packet) throws PacketChatException{
         
     }
 
-    public void putPacketChat(PacketChat packet) throws IOException {
+    public void putPacketChat(PacketChat packet) throws PacketChatException {
         if (client.getUser()==null){
+            sanitizer.logoutSanitize(packet);
             logoutPacketHandler(packet);
         }else{
             loginPacketHandler(packet);

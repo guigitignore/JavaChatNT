@@ -1,9 +1,12 @@
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+
+import org.bouncycastle.util.Arrays;
 
 
 public class ServerChatManager {
@@ -70,23 +73,38 @@ public class ServerChatManager {
         return status;
     }
 
-    public Collection<ServiceChat> getConnectedUsers(){
+    public ServiceChatCollection getUsers(){
         synchronized(connectedUsers){
             return connectedUsers.values();
         }
     }
 
-    public Set<String> getConnectedUsernames(){
+    public ServiceChatCollection getUsersByTag(String tag){
+        ServiceChatCollection result=new ServiceChatCollection();
+        for (ServiceChat user:getUsers()){
+            if (user.getUser().getTag().equals(tag)){
+                result.add(user);
+            }
+        }
+        return result;
+    }
+
+    public ServiceChatCollection getUsersByName(String...names){
+        ServiceChatCollection result=new ServiceChatCollection();
+        for (ServiceChat user:getUsers()){
+            result.add(user);
+        }
+        return result;
+    }
+
+    public Set<String> getUsernames(){
         synchronized(connectedUsers){
             return connectedUsers.keySet();
         }
     }
 
     public PacketChat getListUsersPacket(){
-        Set<String> users;
-        synchronized(connectedUsers){
-            users=connectedUsers.keySet();
-        }
+        Collection<String> users=getUsernames();
         return PacketChatFactory.createListUserPacket(users.toArray(new String[users.size()]));
     }
 
@@ -100,11 +118,11 @@ public class ServerChatManager {
     public void sendTaggedMessage(String tag,String format,Object...args){
         String message=String.format(format,args);
 
-        for (ServiceChat user:ServerChatManager.getInstance().getConnectedUsers()){
+        for (ServiceChat user:ServerChatManager.getInstance().getUsers()){
             if (user.getUser().getTag().equals(tag)){
                 try{
-                    user.getPacketInterface().sendMessage(message);
-                }catch(IOException e){
+                    user.getOutput().sendMessage(message);
+                }catch(PacketChatException e){
                     Logger.w("Cannot send message to %s",user.getUser().getName());
                 }
                 
@@ -115,9 +133,9 @@ public class ServerChatManager {
     public void sendMessage(String format,Object...args){
         String message=String.format(format,args);
 
-        for (ServiceChat user:ServerChatManager.getInstance().getConnectedUsers()){
+        for (ServiceChat user:ServerChatManager.getInstance().getUsers()){
             try{
-                user.getPacketInterface().sendMessage(message);
+                user.getOutput().sendMessage(message);
             }catch(IOException e){
                 Logger.w("Cannot send message to %s",user.getUser().getName());
             }

@@ -1,5 +1,3 @@
-import java.io.IOException;
-
 public interface IPacketChatOutput {
-    public void putPacketChat(PacketChat packet) throws IOException;
+    public void putPacketChat(PacketChat packet) throws PacketChatException;
 }
