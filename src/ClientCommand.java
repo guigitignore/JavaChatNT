@@ -1,8 +1,7 @@
-import java.io.IOException;
 import java.util.StringTokenizer;
 
 public class ClientCommand {
-    public ClientCommand(ServiceTelnet client,String command,String args) throws IOException{
+    public ClientCommand(ServiceTelnet client,String command,String args) throws PacketChatException{
         StringTokenizer tokens;
 
         switch (command){
@@ -18,18 +17,18 @@ public class ClientCommand {
                     String dest=tokens.nextToken();
                     String message=tokens.nextToken("");
 
-                    client.getPacketInterface().sendMessage(message,dest);
+                    client.getUpstreamOutput().sendMessage(message,dest);
                 }
                 break;
             case "sendmsgall":
                 if (args.isEmpty()){
                     client.getOutput().println("Syntax: /sendMsgAll <message>");
                 }else{
-                    client.getPacketInterface().sendMessage(args);
+                    client.getUpstreamOutput().sendMessage(args);
                 }
                 break;
             case "listusers":
-                client.getPacketInterface().sendListUserRequest();
+                client.getUpstreamOutput().sendListUserRequest();
                 break;
             case "help":
                 client.getOutput().println("list of available client commands:");
@@ -40,7 +39,7 @@ public class ClientCommand {
                 //do not break to send help command to server side
             default:
                 //server side command
-                client.getPacketInterface().sendMessage("/"+command+" "+args);
+                client.getUpstreamOutput().sendMessage("/"+command+" "+args);
         }
     }
 }

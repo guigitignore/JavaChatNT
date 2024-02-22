@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 
-public class ServiceChat extends SocketWorker implements IPacketChatInterface{
+public class ServiceChat extends SocketWorker implements IServiceChat{
     private ServerChat server;
     private PacketChatOutput input=null;
     private PacketChatOutput output=null;
@@ -64,6 +64,6 @@ public class ServiceChat extends SocketWorker implements IPacketChatInterface{
     }
 
     public String getDescription() {
-        return String.format("service chat in %s", getSocket().getRemoteSocketAddress().toString());
+        return String.format("ServiceChat in %s", getSocket().getRemoteSocketAddress().toString());
     }
 }

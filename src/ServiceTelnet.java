@@ -11,6 +11,7 @@ public class ServiceTelnet extends SocketWorker {
 
     private IPacketChatInput upstreamInput;
     private PacketChatOutput upstreamOutput;
+    private Socket upstreamSocket;
 
     private ServerTelnet server;
 
@@ -23,7 +24,7 @@ public class ServiceTelnet extends SocketWorker {
         input=new BufferedReader(new InputStreamReader(getSocket().getInputStream()));
         output=new PrintStream(getSocket().getOutputStream());
 
-        Socket upstreamSocket=new Socket(server.getUpstreamHost(),server.getUpstreamPort());
+        upstreamSocket=new Socket(server.getUpstreamHost(),server.getUpstreamPort());
 
         upstreamInput=new InputStreamPacketChat(upstreamSocket.getInputStream());
         upstreamOutput=new PacketChatOutput(new OutputStreamPacketChat(upstreamSocket.getOutputStream()));
@@ -40,6 +41,14 @@ public class ServiceTelnet extends SocketWorker {
 
     public ServerTelnet getServer(){
         return server;
+    }
+
+    public IPacketChatInput getUpstreamInput(){
+        return upstreamInput;
+    }
+
+    public PacketChatOutput getUpstreamOutput(){
+        return upstreamOutput;
     }
 
     public boolean sendLogin(String username,String password) throws PacketChatException{
@@ -86,7 +95,7 @@ public class ServiceTelnet extends SocketWorker {
         return status;
     }
 
-    private void mainLoop() throws PacketChatException{
+    private void mainLoop() throws IOException{
         String line;
         while (!getSocket().isClosed() && (line=input.readLine())!=null){
             if (line.startsWith("/")){
@@ -95,9 +104,19 @@ public class ServiceTelnet extends SocketWorker {
                 String command=tokens.nextToken().substring(1).toLowerCase();
                 String args=tokens.hasMoreTokens()?tokens.nextToken("").strip():"";
 
-                new ClientCommand(this, command, args);
+                try{
+                    new ClientCommand(this, command, args);
+                }catch(PacketChatException e){
+                    throw new IOException(String.format("Cannot execute user command: %s",e.getMessage() ));
+                }
+                
             }else{
-                if (!line.isEmpty()) upstreamOutput.sendMessage(line);
+                try{
+                    if (!line.isEmpty()) upstreamOutput.sendMessage(line);
+                }catch(PacketChatException e){
+                    throw new IOException(String.format("Cannot send user message: %s",e.getMessage() ));
+                }
+                
             }
             
         }
@@ -112,7 +131,11 @@ public class ServiceTelnet extends SocketWorker {
             output.print("password:");
             String password=input.readLine();
             if (username==null || password==null) throw new IOException("null field");
-            status=sendLogin(username, password);   
+            try{
+                status=sendLogin(username, password);   
+            }catch(PacketChatException e){
+                throw new IOException(String.format("Cannot send login for username %s", username));
+            }
         }
     }
 
@@ -135,16 +158,14 @@ public class ServiceTelnet extends SocketWorker {
     }
 
     public String getDescription() {
-        return String.format("service telnet in %s", getSocket().getRemoteSocketAddress().toString());
+        return String.format("ServiceTelnet in %s", getSocket().getRemoteSocketAddress().toString());
     }
 
 
     private void closeUpstreamSocket(){
-        if (packetInterface!=null){
-            try{
-                packetInterface.close();
-            }catch(IOException e){}
-        }
+        try{
+            upstreamSocket.close();
+        }catch(IOException e){}
     }
 
     public void cancel(){

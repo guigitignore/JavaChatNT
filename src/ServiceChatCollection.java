@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class ServiceChatCollection extends ArrayList<ServiceChat> implements IPacketChatInterface{
+public class ServiceChatCollection extends ArrayList<ServiceChat> implements IServiceChat{
     public ServiceChatCollection(){
         super();
     }

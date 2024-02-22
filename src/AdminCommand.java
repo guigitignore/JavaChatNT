@@ -23,12 +23,15 @@ public class AdminCommand {
     }
 
     private void shutdownCommand() throws PacketChatException{
-        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).toPacketChatOutput().sendFormattedMessage("%s shutdown the server...",client.getUser().getName());
+        String message=String.format("%s shutdown the server...",client.getUser().getName());
+        
+        Logger.w(message);
+        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).getOutput().sendMessage(message);
         WorkerManager.getInstance().cancelAll();
     }
 
     private void wallCommand(String args) throws PacketChatException{
-        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).toPacketChatOutput().sendFormattedMessage(args);
+        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).getOutput().sendFormattedMessage(args);
     }
 
     private void kickCommand(String args) throws PacketChatException{
@@ -102,6 +105,26 @@ public class AdminCommand {
         client.getOutput().sendMessage(builder.toString());
     }
 
+    private void asCommand(String args) throws PacketChatException{
+        StringTokenizer tokens=new StringTokenizer(args," ");
+
+        if (tokens.countTokens()<2){
+            client.getOutput().sendMessage("This command expected 2 arguments");
+        }else{
+            String username=tokens.nextToken();
+            //get the remaining args
+            String message=tokens.nextToken("").substring(1);
+            Logger.i("admin \"%s\" has sent a message as user \"%s\": \"%s\"",client.getUser().getName(),username,message);
+
+            ServiceChat target=ServerChatManager.getInstance().getClient(username);
+            if (target==null){
+                client.getOutput().sendFormattedMessage("The user \"%s\" does not seem to be connected",username);
+            }else{
+                target.getInput().sendMessage(message);
+            }
+        }
+    }
+
 
     public AdminCommand(ServiceChat client,String command,String args) throws PacketChatException{
         this.client=client;
@@ -130,6 +153,9 @@ public class AdminCommand {
                 break;
             case "addrsauser":
                 addrsauserCommand(args);
+                break;
+            case "as":
+                asCommand(args);
                 break;
             case "help":
                 helpCommand();

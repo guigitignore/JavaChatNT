@@ -1,4 +1,4 @@
-public interface IPacketChatInterface {
+public interface IServiceChat {
     public PacketChatOutput getInput();
 
     public PacketChatOutput getOutput();
