@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class ServiceChatCollection extends ArrayList<ServiceChat> {
+public class ServiceChatCollection extends ArrayList<ServiceChat> implements IPacketChatInterface{
     public ServiceChatCollection(){
         super();
     }
@@ -18,12 +18,20 @@ public class ServiceChatCollection extends ArrayList<ServiceChat> {
         return stream().map(ServiceChat::getUser).map(User::getName).toList();
     }
 
-    public Collection<IPacketChatOutput> getOutputs(){
+    public Collection<IPacketChatOutput> getOutputInterfaces(){
         return stream().map(ServiceChat::getOutput).map(PacketChatOutput::getInterface).toList();
     }
 
-    public PacketChatOutput toPacketChatOutput(){
-        return new PacketChatOutput(new PacketChatMulticast(getOutputs()));
+    public Collection<IPacketChatOutput> getInputInterfaces(){
+        return stream().map(ServiceChat::getInput).map(PacketChatOutput::getInterface).toList();
+    }
+
+    public PacketChatOutput getOutput(){
+        return new PacketChatOutput(new PacketChatMulticast(getOutputInterfaces()));
+    }
+
+    public PacketChatOutput getInput(){
+        return new PacketChatOutput(new PacketChatMulticast(getInputInterfaces()));
     }
     
 }

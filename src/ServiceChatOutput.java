@@ -17,7 +17,7 @@ public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutp
     }
 
     public String getDescription() {
-        return "ServiceChatOutput of"+client.getDescription();
+        return "ServiceChatOutput of "+client.getDescription();
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
@@ -26,7 +26,7 @@ public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutp
 
     
     private void handlePacket(PacketChat packet) throws PacketChatException{
-        
+        Logger.i("send packet: %s",packet);
         //send packet 
         output.putPacketChat(packet);
     }

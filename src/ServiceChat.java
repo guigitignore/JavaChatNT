@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 
-public class ServiceChat extends SocketWorker{
+public class ServiceChat extends SocketWorker implements IPacketChatInterface{
     private ServerChat server;
     private PacketChatOutput input=null;
     private PacketChatOutput output=null;

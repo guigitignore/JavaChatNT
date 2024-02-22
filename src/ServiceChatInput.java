@@ -5,7 +5,7 @@ import java.util.stream.IntStream;
 public class ServiceChatInput implements IPacketChatOutput{
     private ServiceChat client;
     private User user=null;
-    private User selectedUser=null;
+    private String loginUsername=null;
     private IChallenge challenge=null;
     private PacketChatSanitizer sanitizer;
 
@@ -19,29 +19,33 @@ public class ServiceChatInput implements IPacketChatOutput{
     }
 
     private void handleAuthPacket(PacketChat packet) throws PacketChatException{
-        String username=new String(packet.getField(0));
-        selectedUser=ServerChatManager.getInstance().getDataBase().getUser(username);
+        loginUsername=new String(packet.getField(0));
+        User selectedUser=ServerChatManager.getInstance().getDataBase().getUser(loginUsername);
 
         if (selectedUser==null){
             if (packet.getFieldsNumber()==2){
-                challenge=new RSARegisterChallenge(username,packet.getField(1));
+                challenge=new RSARegisterChallenge(loginUsername,packet.getField(1));
             }else{
-                challenge=new PasswordRegisterChallenge(username);
+                challenge=new PasswordRegisterChallenge(loginUsername);
             }
         }else{
             challenge=selectedUser.getChallenge();
         }
+        client.getOutput().sendChallenge(challenge.get());
     }
 
     private void handleChallengePacket(PacketChat packet) throws PacketChatException{
+        User selectedUser;
         byte[] response=packet.getField(0);
 
         if (challenge!=null && challenge.submit(response)){        
-            if (ServerChatManager.getInstance().isConnected(selectedUser.getName())){
+            if (ServerChatManager.getInstance().isConnected(loginUsername)){
                 client.getOutput().sendAuthFailure("logged in another location");
             }else{
+                selectedUser=ServerChatManager.getInstance().getDataBase().getUser(loginUsername);
                 if (Arrays.asList(client.getServer().getTags()).contains(selectedUser.getTag())){
-                    this.user=this.selectedUser;
+                    //set connected user
+                    this.user=selectedUser;
                     client.getOutput().sendAuthSuccess();
                     ServerChatManager.getInstance().register(client);
                 }else{
@@ -79,11 +83,11 @@ public class ServiceChatInput implements IPacketChatOutput{
             int fieldsNumber=packet.getFieldsNumber();
 
             if (fieldsNumber==2){
-                ServerChatManager.getInstance().getClients().toPacketChatOutput().sendPacket(packet);
+                ServerChatManager.getInstance().getClients().getOutput().sendPacket(packet);
             }else{
                 ServerChatManager.getInstance().getClientsByName(IntStream.range(2, fieldsNumber).mapToObj(index -> {
                     return new String(packet.getField(index));
-                }).toList()).toPacketChatOutput().sendPacket(packet);
+                }).toList()).getOutput().sendPacket(packet);
             }
         }
     }

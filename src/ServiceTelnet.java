@@ -9,7 +9,8 @@ public class ServiceTelnet extends SocketWorker {
     private BufferedReader input;
     private PrintStream output;
 
-    private PacketChatInterface packetInterface=null;
+    private IPacketChatInput upstreamInput;
+    private PacketChatOutput upstreamOutput;
 
     private ServerTelnet server;
 
@@ -23,16 +24,14 @@ public class ServiceTelnet extends SocketWorker {
         output=new PrintStream(getSocket().getOutputStream());
 
         Socket upstreamSocket=new Socket(server.getUpstreamHost(),server.getUpstreamPort());
-        packetInterface=new PacketChatInterface(upstreamSocket);
+
+        upstreamInput=new InputStreamPacketChat(upstreamSocket.getInputStream());
+        upstreamOutput=new PacketChatOutput(new OutputStreamPacketChat(upstreamSocket.getOutputStream()));
 
     }
 
     public BufferedReader getInput(){
         return input;
-    }
-
-    public PacketChatInterface getPacketInterface(){
-        return packetInterface;
     }
 
     public PrintStream getOutput(){
@@ -43,19 +42,19 @@ public class ServiceTelnet extends SocketWorker {
         return server;
     }
 
-    public boolean sendLogin(String username,String password) throws IOException{
+    public boolean sendLogin(String username,String password) throws PacketChatException{
         boolean status=false;
         PacketChat packet;
         
-        packetInterface.sendUsername(username);
-        packet=packetInterface.getPacket();
+        upstreamOutput.sendUsername(username);
+        packet=upstreamInput.getPacketChat();
 
         Logger.i("CHALLENGE  "+packet.toString());
 
         if (packet.getCommand()==PacketChat.CHALLENGE){
             if (packet.getFieldsNumber()==0){
-                packetInterface.sendPassword(password);
-                packet=packetInterface.getPacket();
+                upstreamOutput.sendPassword(password);
+                packet=upstreamInput.getPacketChat();
 
                 Logger.i("AUTH "+packet.toString());
 
@@ -87,7 +86,7 @@ public class ServiceTelnet extends SocketWorker {
         return status;
     }
 
-    private void mainLoop() throws IOException{
+    private void mainLoop() throws PacketChatException{
         String line;
         while (!getSocket().isClosed() && (line=input.readLine())!=null){
             if (line.startsWith("/")){
@@ -98,7 +97,7 @@ public class ServiceTelnet extends SocketWorker {
 
                 new ClientCommand(this, command, args);
             }else{
-                if (!line.isEmpty()) packetInterface.sendMessage(line);
+                if (!line.isEmpty()) upstreamOutput.sendMessage(line);
             }
             
         }

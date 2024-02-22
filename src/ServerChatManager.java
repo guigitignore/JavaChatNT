@@ -33,7 +33,7 @@ public class ServerChatManager {
         }
         if (status){
             try{
-                getClients().toPacketChatOutput().sendMessage("\"%s\" has disconnected",user.getUser().getName());
+                getClients().getOutput().sendFormattedMessage("\"%s\" is now connected",user.getUser().getName());
             }catch(PacketChatException e){
                 Logger.w("Error occured while sending connection message: %s",e.getMessage());
             }
@@ -52,7 +52,7 @@ public class ServerChatManager {
             }
             if (status){
                 try{
-                    getClients().toPacketChatOutput().sendMessage("\"%s\" has disconnected",user.getUser().getName());
+                    getClients().getOutput().sendFormattedMessage("\"%s\" has disconnected",user.getUser().getName());
                 }catch(PacketChatException e){
                     Logger.w("Error occured while sending diconnection message: %s",e.getMessage());
                 }
