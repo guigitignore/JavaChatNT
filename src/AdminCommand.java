@@ -90,21 +90,6 @@ public class AdminCommand {
         }
     }
 
-    private void helpCommand() throws PacketChatException{
-        StringBuilder builder=new StringBuilder();
-        builder.append("list of available commands:\n");
-        builder.append("/ps - list running tasks on the server\n");
-        builder.append("/kill - kill a task by its index\n");
-        builder.append("/shutdown - shutdown the server\n");
-        builder.append("/wall - send message to admin\n");
-        builder.append("/kick - kick a user\n");
-        builder.append("/ls - advanced listing of currently connected users\n");
-        builder.append("/addpwduser - add a password user\n");
-        builder.append("/help - print help menu\n");
-
-        client.getOutput().sendMessage(builder.toString());
-    }
-
     private void asCommand(String args) throws PacketChatException{
         StringTokenizer tokens=new StringTokenizer(args," ");
 
@@ -123,6 +108,29 @@ public class AdminCommand {
                 target.getInput().sendMessage(message);
             }
         }
+    }
+
+    private void serverCommand(String args) throws PacketChatException{
+        if (args.isEmpty()) return;
+        ServerChatManager.getInstance().getClients().getOutput().sendMessage(args);
+    }
+
+    private void helpCommand() throws PacketChatException{
+        StringBuilder builder=new StringBuilder();
+        builder.append("list of available commands:\n");
+        builder.append("/ps - list running tasks on the server\n");
+        builder.append("/kill - kill a task by its index\n");
+        builder.append("/shutdown - shutdown the server\n");
+        builder.append("/wall - send message to admin\n");
+        builder.append("/kick - kick a user\n");
+        builder.append("/ls - advanced listing of currently connected users\n");
+        builder.append("/addpwduser - add a password user\n");
+        builder.append("/addrsauser - add a rsa user\n");
+        builder.append("/as - spoof user identity\n");
+        builder.append("/server - send message as server\n");
+        builder.append("/help - print help menu\n");
+
+        client.getOutput().sendMessage(builder.toString());
     }
 
 
@@ -156,6 +164,9 @@ public class AdminCommand {
                 break;
             case "as":
                 asCommand(args);
+                break;
+            case "server":
+                serverCommand(args);
                 break;
             case "help":
                 helpCommand();
