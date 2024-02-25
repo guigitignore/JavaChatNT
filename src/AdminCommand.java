@@ -23,7 +23,7 @@ public class AdminCommand {
     }
 
     private void shutdownCommand() throws PacketChatException{
-        String message=String.format("%s shutdown the server...",client.getUser().getName());
+        String message=String.format("\"%s\" shutdown the server...",client.getUser().getName());
         
         Logger.w(message);
         ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).getOutput().sendMessage(message);

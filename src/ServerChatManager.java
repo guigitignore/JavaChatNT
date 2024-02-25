@@ -91,10 +91,6 @@ public class ServerChatManager {
         }
     }
 
-    public PacketChat getListUsersPacket(){
-        return PacketChatFactory.createListUserPacket(getUsers());
-    }
-
     //returns null if user is not found
     public ServiceChat getConnectedUser(String username){
         synchronized(connectedUsers){

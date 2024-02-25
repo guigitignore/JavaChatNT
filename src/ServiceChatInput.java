@@ -48,6 +48,8 @@ public class ServiceChatInput implements IPacketChatOutput{
                     this.user=selectedUser;
                     client.getOutput().sendAuthSuccess();
                     ServerChatManager.getInstance().register(client);
+                    //send list of connected users
+                    client.getOutput().sendListUser(ServerChatManager.getInstance().getUsers());
                 }else{
                     client.getOutput().sendAuthFailure("Unauthorized connection");
                 }
@@ -93,7 +95,7 @@ public class ServiceChatInput implements IPacketChatOutput{
     }
 
     private void handleListUserPacket(PacketChat packet) throws PacketChatException{
-        client.getOutput().sendPacket(ServerChatManager.getInstance().getListUsersPacket());
+        client.getOutput().sendListUser(ServerChatManager.getInstance().getUsers());
     }
 
 

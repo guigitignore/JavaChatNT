@@ -1,3 +1,5 @@
+import java.util.Collection;
+
 public class PacketChatOutput {
     public final static String DEFAULT_SENDER="[SERVER]";
     
@@ -47,7 +49,7 @@ public class PacketChatOutput {
         sendPacket(PacketChatFactory.createListUserPacket());
     }
 
-    public void sendListUser(String...users) throws PacketChatException{
+    public void sendListUser(Collection<String> users) throws PacketChatException{
         sendPacket(PacketChatFactory.createListUserPacket(users));
     }
 }
