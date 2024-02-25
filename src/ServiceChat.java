@@ -114,12 +114,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
             mainloop();
         }catch(IOException e){}
 
-        doCleanup();
-    }
-
-    private void doCleanup(){
-        if (outputServiceChat!=null) outputServiceChat.cancel();
-        ServerChatManager.getInstance().remove(this);
+        cancel();
         WorkerManager.getInstance().remove(this);
     }
 
@@ -128,6 +123,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
     }
 
     public void cancel(){
+        ServerChatManager.getInstance().remove(this);
         if (outputServiceChat!=null) outputServiceChat.cancel();
         super.cancel();
     }
