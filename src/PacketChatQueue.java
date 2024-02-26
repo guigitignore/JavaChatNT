@@ -1,6 +1,6 @@
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class PacketChatQueue implements IPacketChatInput,IPacketChatOutput{
+public class PacketChatQueue implements IPacketChatInterface{
     private ArrayBlockingQueue<PacketChat> queue;
 
     public PacketChatQueue(int capacity){

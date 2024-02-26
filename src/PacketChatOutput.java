@@ -33,8 +33,8 @@ public class PacketChatOutput {
         sendChallenge(password.getBytes());
     }
 
-    public void sendUsername(String username) throws PacketChatException{
-        sendPacket(PacketChatFactory.createLoginPacket(username));
+    public void sendUsername(String username,byte[]...params) throws PacketChatException{
+        sendPacket(PacketChatFactory.createLoginPacket(username,params));
     }
 
     public void sendAuthSuccess() throws PacketChatException{

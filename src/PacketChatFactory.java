@@ -16,12 +16,14 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createLoginPacket(String username){
+    public static PacketChat createLoginPacket(String username,byte[]...params){
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.AUTH);
         packet.addField(username.getBytes());
-
+        for (byte[] param:params){
+            packet.addField(param);
+        }
         return packet;
     }
 

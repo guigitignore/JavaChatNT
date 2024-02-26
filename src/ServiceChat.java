@@ -27,7 +27,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
     }
 
     public User getUser(){
-        return inputServiceChat.getUser();
+        return inputServiceChat==null?null:inputServiceChat.getUser();
     }
 
     public ServerChat getServer(){

@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.StringTokenizer;
+import java.util.stream.IntStream;
 
 public class PacketChatTelnetInterface implements IPacketChatInterface {
     private final static int USERNAME_STATE=0;
@@ -50,7 +51,16 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
             case PacketChat.SEND_MSG:
                 String sender=new String(packet.getField(0));
                 String message=new String(packet.getField(1));
-                output.printf("%s %s\n",sender,message);
+                int fieldsNumber=packet.getFieldsNumber();
+
+                if (fieldsNumber>2){
+                    String dest=String.join(",",IntStream.range(2, fieldsNumber).mapToObj(index -> {
+                        return new String(packet.getField(index));
+                    }).toList());
+                    output.printf("%s->%s %s\n",sender,dest,message);
+                }else{
+                    output.printf("%s %s\n",sender,message);
+                }
                 break;
             
             case PacketChat.LIST_USERS:

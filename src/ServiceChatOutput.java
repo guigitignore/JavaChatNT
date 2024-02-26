@@ -3,7 +3,7 @@ public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutp
 
     private ServiceChat client;
     private IPacketChatOutput output;
-    private PacketChatQueue queue=new PacketChatQueue(CAPACITY);
+    private IPacketChatInterface queue=new PacketChatQueue(CAPACITY);
 
     public ServiceChatOutput(ServiceChat client,IPacketChatOutput output){
         this.client=client;
