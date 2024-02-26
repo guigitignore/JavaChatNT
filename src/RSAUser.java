@@ -1,7 +1,5 @@
-import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.Security;
-import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
 
@@ -14,15 +12,9 @@ public class RSAUser extends User{
 
     private Cipher cipher;
 
-    private static PublicKey importPublicKey(byte[] publicKeyBytes) throws Exception {
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA"); 
-        return keyFactory.generatePublic(keySpec);
-    }
-
     public RSAUser(String name,byte[] key,String tag) throws Exception{
         super(name,key,tag);
-        PublicKey publicKey=importPublicKey(key);
+        PublicKey publicKey=RSAEncoder.getInstance().publicDecode(key);
         cipher= Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
         cipher.init( Cipher.ENCRYPT_MODE,publicKey );
     }

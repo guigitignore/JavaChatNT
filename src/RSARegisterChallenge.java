@@ -11,14 +11,13 @@ public class RSARegisterChallenge implements IChallenge{
         }catch(Exception e){
             Logger.w("Invalid register public key");
         }
-
     }
 
     public byte[] get() {
         byte[] challengeBytes;
 
         if (challenge==null){
-            //generate a fake challenge
+            //generate a fake challenge to not disclose existing user
             challengeBytes=new byte[RSAChallenge.CHALLENGE_SIZE];
             new Random().nextBytes(challengeBytes);
             challengeBytes[0]&=0x7F;
