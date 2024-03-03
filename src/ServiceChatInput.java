@@ -24,9 +24,9 @@ public class ServiceChatInput implements IPacketChatOutput{
 
         if (selectedUser==null){
             if (packet.getFieldsNumber()==2){
-                challenge=new RSARegisterChallenge(loginUsername,packet.getField(1));
+                challenge=new RSARegisterChallenge(loginUsername,packet.getField(1),client.getServer().getTags()[0]);
             }else{
-                challenge=new PasswordRegisterChallenge(loginUsername);
+                challenge=new PasswordRegisterChallenge(loginUsername,client.getServer().getTags()[0]);
             }
         }else{
             challenge=selectedUser.getChallenge();

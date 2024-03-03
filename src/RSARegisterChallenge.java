@@ -4,13 +4,18 @@ public class RSARegisterChallenge implements IChallenge{
     private RSAUser user=null;
     private IChallenge challenge=null;
 
-    public RSARegisterChallenge(String username,byte[] publicKey){
+
+    public RSARegisterChallenge(String username,byte[] publicKey,String tag){
         try{
-            user=new RSAUser(username, publicKey);
+            user=new RSAUser(username, publicKey,tag);
             challenge=user.getChallenge();
         }catch(Exception e){
             Logger.w("Invalid register public key");
         }
+    }
+
+    public RSARegisterChallenge(String username,byte[] publicKey){
+        this(username,publicKey,User.USER_TAG);
     }
 
     public byte[] get() {

@@ -24,11 +24,12 @@ public abstract class SocketWorker extends Thread implements IWorker{
     }
 
     public void cancel() {
-        if (!socket.isClosed()){
-            try{
-                socket.close();
-            }catch(IOException e){}
-        }
-        //WorkerManager.getInstance().remove(this);
+        synchronized(socket){
+            if (!socket.isClosed()){
+                try{
+                    socket.close();
+                }catch(IOException e){}
+            }
+        } 
     }
 }

@@ -44,10 +44,12 @@ public abstract class ServerSocketWorker extends Thread implements IWorker{
     }
 
     public void cancel(){
-        if (!server.isClosed()){
-            try{
-                server.close();
-            }catch(IOException e){}
+        synchronized(server){
+            if (!server.isClosed()){
+                try{
+                    server.close();
+                }catch(IOException e){}
+            }
         }
     }
 }

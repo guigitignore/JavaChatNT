@@ -84,7 +84,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
         output=new PacketChatOutput(outputServiceChat);
     }
 
-    private void mainloop() throws IOException{
+    private void mainloop(){
         PacketChat packet;
 
         while (true){
@@ -114,17 +114,15 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
             mainloop();
         }catch(IOException e){}
 
-        cancel();
+        ServerChatManager.getInstance().remove(this);
+        server.remove(this);
         WorkerManager.getInstance().remove(this);
+        if (outputServiceChat!=null) outputServiceChat.cancel();
+        cancel();
     }
 
     public String getDescription() {
         return String.format("ServiceChat in %s", getSocket().getRemoteSocketAddress().toString());
     }
 
-    public void cancel(){
-        ServerChatManager.getInstance().remove(this);
-        if (outputServiceChat!=null) outputServiceChat.cancel();
-        super.cancel();
-    }
 }
