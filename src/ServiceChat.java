@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.Socket;
 
 
@@ -38,25 +37,24 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
         return clientType;
     }
 
+    private int readInputStreamByte() throws IOException{
+        int result=getSocket().getInputStream().read();
+        if (result==-1) throw new IOException("end of stream");
+        return result;
+    }
+
     private ClientType identifyClientType() throws IOException{
         ClientType clientType;
 
         getSocket().getOutputStream().write("Welcome to JavaChatNT. Press [enter] to continue...".getBytes());
-        InputStream inputStream=getSocket().getInputStream();
 
-        int inputValue=inputStream.read();
-
-        if (inputValue==0xFF){
+        if (readInputStreamByte()==0xFF){
             clientType=ClientType.PACKETCHAT_CLIENT;
+            //read the remaining bytes of hello packet to make sure alignment is correct.
+            for (int i=0;i<7;i++) readInputStreamByte();
         }else{
             clientType=ClientType.TELNET_CLIENT;
-            while (inputValue!=LINE_FEED){
-
-                if (inputValue==-1){
-                    throw new IOException("end of stream");
-                }
-                inputValue=inputStream.read();
-            }
+            while (readInputStreamByte()!=LINE_FEED);
         }
 
         return clientType;

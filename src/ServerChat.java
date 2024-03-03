@@ -45,6 +45,7 @@ public class ServerChat extends ServerSocketWorker{
         }
         killClients();
         WorkerManager.getInstance().remove(this);
+        cancel();
     }
 
     public boolean remove(ServiceChat client){
