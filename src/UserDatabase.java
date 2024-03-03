@@ -68,35 +68,39 @@ class UserDatabase{
     public boolean addUser(User user){
         boolean status;
         status=users.putIfAbsent(user.getName(), user)==null;
-        if (status){
-            //autosave
-            try{
-                export();
-            }catch(IOException e){
-                Logger.e("Cannot save database");
-            }
-        }
+        if (status) export();
         return status;
     }
 
-    public void export() throws IOException{
-        Encoder encoder=Base64.getEncoder();
-        PrintStream writer=new PrintStream(new FileOutputStream(filename));
+    public boolean removeUser(User user){
+        boolean status;
+        status=users.remove(user.getName(), user);
+        if (status) export();
+        return status;
+    }
 
-        for (User user:users.values()){
-            StringBuilder builder=new StringBuilder();
-            byte[] name=user.getName().getBytes();
-            builder.append(new String(encoder.encode(name)));
-            builder.append(":");
-            builder.append(user.getTypeName());
-            builder.append(":");
-            byte[] key=user.getKey();
-            builder.append(new String(encoder.encode(key)));
-            builder.append(":");
-            builder.append(user.getTag());
-            writer.println(builder.toString());
-        }
+    public void export(){
+        try{
+            Encoder encoder=Base64.getEncoder();
+            PrintStream writer=new PrintStream(new FileOutputStream(filename));
 
-        writer.close();
+            for (User user:users.values()){
+                StringBuilder builder=new StringBuilder();
+                byte[] name=user.getName().getBytes();
+                builder.append(new String(encoder.encode(name)));
+                builder.append(":");
+                builder.append(user.getTypeName());
+                builder.append(":");
+                byte[] key=user.getKey();
+                builder.append(new String(encoder.encode(key)));
+                builder.append(":");
+                builder.append(user.getTag());
+                writer.println(builder.toString());
+            }
+
+            writer.close();
+        }catch(IOException e){
+            Logger.e("Cannot save database");
+        }  
     }
 }
