@@ -27,11 +27,11 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createListUserPacket(String...users){
-        return createListUserPacket(Arrays.asList(users));
+    public static PacketChat createListUserPacket(){
+        return createListUserPacket(new String[0]);
     }
 
-    public static PacketChat createListUserPacket(Collection<String> users){
+    public static PacketChat createListUserPacket(Iterable<String> users){
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.LIST_USERS);
