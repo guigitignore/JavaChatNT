@@ -62,7 +62,7 @@ public class ServerChat extends ServerSocketWorker{
 
     private void killClients(){
         for (ServiceChat client:getClients()){
-            Logger.i("canceling %s",client.getUser().getName());
+            if (client.getUser()!=null) Logger.i("canceling %s",client.getUser().getName());
             client.cancel();
         }
     }

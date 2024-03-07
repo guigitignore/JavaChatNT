@@ -1,19 +1,12 @@
-public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutput{
+public class ServiceChatOutput  extends LoopWorker implements IPacketChatOutput{
     public final static int CAPACITY=100;
 
     private ServiceChat client;
     private IPacketChatOutput output;
-    private IPacketChatInterface queue=new PacketChatQueue(CAPACITY);
+    private IPacketChatInterface queue;
 
     public ServiceChatOutput(ServiceChat client,IPacketChatOutput output){
-        this.client=client;
-        this.output=output;
-
-        WorkerManager.getInstance().registerAndStart(this);
-    }
-
-    public boolean getStatus() {
-        return !isInterrupted();
+        super(client,output);
     }
 
     public String getDescription() {
@@ -31,22 +24,20 @@ public class ServiceChatOutput extends Thread implements IWorker,IPacketChatOutp
         output.putPacketChat(packet);
     }
 
-    public void run() {
-
-        while (true){
-            try{
-                PacketChat packet=queue.getPacketChat();
-                handlePacket(packet);
-            }catch(PacketChatException e){
-                break;
-            }
-        }
-
-        WorkerManager.getInstance().remove(this);
+    public void setup() throws Exception {
+        this.queue=new PacketChatQueue(CAPACITY);
+        this.client=(ServiceChat)getArgs()[0];
+        this.output=(IPacketChatOutput)getArgs()[1];
     }
 
-    public void cancel() {
-        interrupt();
+    public void loop() throws Exception {
+        PacketChat packet=queue.getPacketChat();
+        handlePacket(packet);
     }
+
+    public void end() throws Exception {}
+
+    public void init() throws Exception {}
+
     
 }

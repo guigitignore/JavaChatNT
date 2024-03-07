@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 
 public class ClientChat extends SocketWorker{
@@ -30,7 +31,23 @@ public class ClientChat extends SocketWorker{
         return fileInterface;
     }
 
+    private void skipWelcomeMessage() throws IOException{
+        InputStream inputStream=getSocket().getInputStream();
+        inputStream.skip(inputStream.available());
+    }
+
+    private void sendHelloPacket() throws IOException{
+        try{
+            PacketChatFactory.createHelloPacket().send(getSocket().getOutputStream());
+        }catch(PacketChatException e){
+            throw new IOException(e.getMessage());
+        }
+    }
+
     private void initStreams() throws IOException{
+        skipWelcomeMessage();
+        sendHelloPacket();
+
         upstreamInterface=new PacketChatRawInterface(getSocket());
         messageInterface=new PacketChatTelnetInterface();
         fileInterface=new PacketChatFileInterface();
@@ -45,6 +62,8 @@ public class ClientChat extends SocketWorker{
         while (true){
             try{
                 packet=upstreamInterface.getPacketChat();
+                
+                Logger.i("got packet: %s",packet.toString());
             }catch(PacketChatException e){
                 Logger.w("exit output loop: %s",e.getMessage());
                 break;
