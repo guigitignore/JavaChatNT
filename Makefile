@@ -59,5 +59,11 @@ runjar: $(OUT)
 	@echo "Running $(OUT)..."
 	@$(JAVA) -jar $(OUT_DIR)/$(JARFILE)
 
-run: $(OBJ)
-	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main
+server: $(OBJ)
+	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main serve
+
+generator: $(OBJ)
+	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main generate $(USER)
+
+client: $(OBJ)
+	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main connect

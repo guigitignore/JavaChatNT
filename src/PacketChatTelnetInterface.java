@@ -19,11 +19,19 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
     private BufferedReader input;
     private PrintStream output;
     private int state=USERNAME_STATE;
+
+    public PacketChatTelnetInterface(BufferedReader input,PrintStream output){
+        this.input=input;
+        this.output=output;
+        output.print(USERNAME_PROMPT);
+    }
     
     public PacketChatTelnetInterface(Socket socket) throws IOException{
-        input=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        output=new PrintStream(socket.getOutputStream());
-        output.print(USERNAME_PROMPT);
+        this(new BufferedReader(new InputStreamReader(socket.getInputStream())),new PrintStream(socket.getOutputStream()));
+    }
+
+    public PacketChatTelnetInterface() throws IOException{
+        this(new BufferedReader(new InputStreamReader(System.in)),System.out);
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {

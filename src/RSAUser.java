@@ -1,14 +1,7 @@
 import java.security.PublicKey;
-import java.security.Security;
-
 import javax.crypto.Cipher;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 public class RSAUser extends User{
-    static{
-        Security.addProvider(new BouncyCastleProvider());
-    }
 
     private Cipher cipher;
 

@@ -41,6 +41,12 @@ public class PacketChatFactory{
         return packet;
     }
 
+    public static PacketChat createHelloPacket(){
+        PacketChat packet=new PacketChat();
+        packet.setCommand(PacketChat.HELLO);
+        return packet;
+    }
+
     public static PacketChat createChallengePacket(byte[] challenge){
         PacketChat packet=new PacketChat();
 
