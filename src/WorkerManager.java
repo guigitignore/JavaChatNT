@@ -43,11 +43,9 @@ public class WorkerManager {
     }
 
     public IWorker[] getWorkers(){
-        IWorker[] result;
         synchronized(workers){
-            result=workers.toArray(new IWorker[workers.size()]);
+            return workers.toArray(new IWorker[workers.size()]);
         }
-        return result;
     }
 
     public void remove(IWorker worker){

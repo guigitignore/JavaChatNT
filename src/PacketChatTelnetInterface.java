@@ -1,6 +1,5 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.StringTokenizer;
@@ -16,22 +15,39 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
     private final static String SENDER="user";
 
 
-    private BufferedReader input;
+    private InputStream input;
     private PrintStream output;
     private int state=USERNAME_STATE;
 
-    public PacketChatTelnetInterface(BufferedReader input,PrintStream output){
+    public PacketChatTelnetInterface(InputStream input,PrintStream output){
         this.input=input;
         this.output=output;
         output.print(USERNAME_PROMPT);
     }
     
     public PacketChatTelnetInterface(Socket socket) throws IOException{
-        this(new BufferedReader(new InputStreamReader(socket.getInputStream())),new PrintStream(socket.getOutputStream()));
+        this(socket.getInputStream(),new PrintStream(socket.getOutputStream()));
     }
 
     public PacketChatTelnetInterface() throws IOException{
-        this(new BufferedReader(new InputStreamReader(System.in)),System.out);
+        this(System.in,System.out);
+    }
+
+    private String readLine() throws Exception{
+        int chr;
+
+        StringBuilder builder=new StringBuilder();
+        while (!Thread.interrupted()){
+            if (input.available()>0){
+                chr=input.read();
+                if (chr==-1) throw new IOException("end of stream");
+                if (chr==0xA) break;
+                builder.append((char)chr);
+            }
+            Thread.sleep(10);
+        }
+
+        return builder.toString();
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
@@ -90,11 +106,9 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
 
         do{
             try{
-                line=input.readLine();
-                if (line==null) throw new IOException("line is null");
-
+                line=readLine();
                 if (line.isEmpty()) continue;
-            }catch(IOException e){
+            }catch(Exception e){
                 throw new PacketChatException(e.getMessage());
             }
             switch(state){

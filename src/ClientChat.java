@@ -4,12 +4,12 @@ import java.net.Socket;
 
 public class ClientChat extends SocketWorker{
 
-    private PacketChatFileInterface fileInterface;
     private PacketChatTelnetInterface messageInterface;
     private PacketChatRawInterface upstreamInterface;
 
-    private ClientChatMessageInput clientInputMessage=null;
-    private ClientChatOutput clientOutput;
+    private ClientChatInput clientInput=null;
+    private ClientChatOutput clientOutput=null;
+    private ClientChatFile clientFile=null;
 
     public ClientChat(String host,int port) throws Exception{
         super(new Socket(host, port));
@@ -19,16 +19,16 @@ public class ClientChat extends SocketWorker{
         return String.format("ClientChat -> ServerChat %s", getSocket().getRemoteSocketAddress().toString());
     }
 
-    public IPacketChatInterface getUpstreamInterface(){
-        return upstreamInterface;
+    public IPacketChatOutput getInput(){
+        return clientInput;
     }
 
-    public IPacketChatInterface getMessageInterface(){
-        return messageInterface;
+    public IPacketChatOutput getOutput(){
+        return clientOutput;
     }
 
-    public PacketChatFileInterface getFileInterface(){
-        return fileInterface;
+    public ClientChatFile getFile(){
+        return clientFile;
     }
 
     private void skipWelcomeMessage() throws IOException{
@@ -50,10 +50,10 @@ public class ClientChat extends SocketWorker{
 
         upstreamInterface=new PacketChatRawInterface(getSocket());
         messageInterface=new PacketChatTelnetInterface();
-        fileInterface=new PacketChatFileInterface();
 
-        clientOutput=new ClientChatOutput(this);
-        clientInputMessage=new ClientChatMessageInput(this);
+        clientInput=new ClientChatInput(this,messageInterface);
+        clientOutput=new ClientChatOutput(this,new PacketChatInterface(messageInterface, upstreamInterface));
+        clientFile=new ClientChatFile(this);
     }
 
     private void mainloop() throws IOException{
@@ -69,7 +69,7 @@ public class ClientChat extends SocketWorker{
                 break;
             }
             try{
-                clientOutput.putPacketChat(packet);
+                clientInput.putPacketChat(packet);
             }catch(PacketChatException e){
                 Logger.w("Packet dropped");
             }
@@ -85,9 +85,9 @@ public class ClientChat extends SocketWorker{
             Logger.e("IO error: %s",e.getMessage());
         }
 
-        if (clientInputMessage!=null) clientInputMessage.cancel();
+        WorkerManager.getInstance().cancelAll();
         WorkerManager.getInstance().remove(this);
-        cancel();
+        
     }
     
 }
