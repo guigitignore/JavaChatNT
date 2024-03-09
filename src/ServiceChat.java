@@ -2,10 +2,8 @@ import java.io.IOException;
 import java.net.Socket;
 
 
-public class ServiceChat extends SocketWorker implements IServiceChat{
+public class ServiceChat extends SocketWorker implements IServiceChat,IPacketChatInterface{
     private ServerChat server;
-    private PacketChatOutput input=null;
-    private PacketChatOutput output=null;
     private ServiceChatInput inputServiceChat=null;
     private ServiceChatOutput outputServiceChat=null;
     private IPacketChatInterface packetChatInterface=null;
@@ -18,11 +16,11 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
     }
 
     public PacketChatOutput getInput(){
-        return input;
+        return new PacketChatOutput(inputServiceChat);
     }
 
     public PacketChatOutput getOutput(){
-        return output;
+        return new PacketChatOutput(outputServiceChat);
     }
 
     public User getUser(){
@@ -77,9 +75,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
 
     private void initStreams() throws IOException{
         inputServiceChat= new ServiceChatInput(this);
-        input=new PacketChatOutput(inputServiceChat);
-        outputServiceChat=new ServiceChatOutput(this, packetChatInterface);
-        output=new PacketChatOutput(outputServiceChat);
+        outputServiceChat=new ServiceChatOutput(this);
     }
 
     private void mainloop(){
@@ -87,12 +83,12 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
 
         while (true){
             try{
-                packet=packetChatInterface.getPacketChat();
+                packet=getPacketChat();
             }catch(PacketChatException e){
                 break;
             }
             try{
-                input.sendPacket(packet);
+                inputServiceChat.putPacketChat(packet);
             }catch(PacketChatException e){
                 if (getUser()==null){
                     Logger.w("Packet dropped on input for %s: %s",getDescription(),e.getMessage());
@@ -121,6 +117,14 @@ public class ServiceChat extends SocketWorker implements IServiceChat{
 
     public String getDescription() {
         return String.format("ServiceChat in %s", getSocket().getRemoteSocketAddress().toString());
+    }
+
+    public PacketChat getPacketChat() throws PacketChatException {
+        return packetChatInterface.getPacketChat();
+    }
+
+    public void putPacketChat(PacketChat packet) throws PacketChatException {
+        packetChatInterface.putPacketChat(packet);
     }
 
 }

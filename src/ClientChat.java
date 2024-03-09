@@ -2,13 +2,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 
-public class ClientChat extends SocketWorker{
+public class ClientChat extends SocketWorker implements IPacketChatInterface{
 
-    private PacketChatTelnetInterface messageInterface;
-    private PacketChatRawInterface upstreamInterface;
+    private IPacketChatInterface packetInterface;
 
-    private ClientChatInput clientInput=null;
-    private ClientChatOutput clientOutput=null;
+    private ClientChatMessage clientMessage=null;
     private ClientChatFile clientFile=null;
 
     public ClientChat(String host,int port) throws Exception{
@@ -17,14 +15,6 @@ public class ClientChat extends SocketWorker{
 
     public String getDescription() {
         return String.format("ClientChat -> ServerChat %s", getSocket().getRemoteSocketAddress().toString());
-    }
-
-    public IPacketChatOutput getInput(){
-        return clientInput;
-    }
-
-    public IPacketChatOutput getOutput(){
-        return clientOutput;
     }
 
     public ClientChatFile getFile(){
@@ -48,28 +38,30 @@ public class ClientChat extends SocketWorker{
         skipWelcomeMessage();
         sendHelloPacket();
 
-        upstreamInterface=new PacketChatRawInterface(getSocket());
-        messageInterface=new PacketChatTelnetInterface();
-
-        clientInput=new ClientChatInput(this,messageInterface);
-        clientOutput=new ClientChatOutput(this,new PacketChatInterface(messageInterface, upstreamInterface));
+        packetInterface=new PacketChatRawInterface(getSocket());
+        clientMessage=new ClientChatMessage(this);
         clientFile=new ClientChatFile(this);
     }
 
     private void mainloop() throws IOException{
         PacketChat packet;
+        byte command;
 
         while (true){
             try{
-                packet=upstreamInterface.getPacketChat();
-                
+                packet=packetInterface.getPacketChat();
                 Logger.i("got packet: %s",packet.toString());
             }catch(PacketChatException e){
                 Logger.w("exit output loop: %s",e.getMessage());
                 break;
             }
             try{
-                clientInput.putPacketChat(packet);
+                command=packet.getCommand();
+                if (command==PacketChat.FILE_INIT || command==PacketChat.FILE_DATA || command==PacketChat.FILE_OVER){
+                    clientFile.putPacketChat(packet);
+                }else{
+                    clientMessage.putPacketChat(packet);
+                }
             }catch(PacketChatException e){
                 Logger.w("Packet dropped");
             }
@@ -88,6 +80,14 @@ public class ClientChat extends SocketWorker{
         WorkerManager.getInstance().cancelAll();
         WorkerManager.getInstance().remove(this);
         
+    }
+
+    public PacketChat getPacketChat() throws PacketChatException {
+        return packetInterface.getPacketChat();
+    }
+
+    public void putPacketChat(PacketChat packet) throws PacketChatException {
+        packetInterface.putPacketChat(packet);
     }
     
 }

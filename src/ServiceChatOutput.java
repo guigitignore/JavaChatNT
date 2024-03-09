@@ -2,11 +2,10 @@ public class ServiceChatOutput  extends LoopWorker implements IPacketChatOutput{
     public final static int CAPACITY=100;
 
     private ServiceChat client;
-    private IPacketChatOutput output;
     private IPacketChatInterface queue;
 
-    public ServiceChatOutput(ServiceChat client,IPacketChatOutput output){
-        super(client,output);
+    public ServiceChatOutput(ServiceChat client){
+        super(client);
     }
 
     public String getDescription() {
@@ -21,13 +20,12 @@ public class ServiceChatOutput  extends LoopWorker implements IPacketChatOutput{
     private void handlePacket(PacketChat packet) throws PacketChatException{
         Logger.i("send packet: %s",packet);
         //send packet 
-        output.putPacketChat(packet);
+        client.putPacketChat(packet);
     }
 
     public void setup() throws Exception {
         this.queue=new PacketChatQueue(CAPACITY);
         this.client=(ServiceChat)getArgs()[0];
-        this.output=(IPacketChatOutput)getArgs()[1];
     }
 
     public void loop() throws Exception {
