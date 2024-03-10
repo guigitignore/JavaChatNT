@@ -1,4 +1,7 @@
 import java.util.Random;
+
+import javax.crypto.Cipher;
+
 import java.util.Arrays;
 
 public class RSAChallenge implements IChallenge{
@@ -15,9 +18,12 @@ public class RSAChallenge implements IChallenge{
         Random r = new Random();
         r.nextBytes(challengeResult);
         challengeResult[0]&=0x7F;
+        Logger.i("challenge result: %s",Arrays.toString(challengeResult));
         
         try{
-            challenge=user.getCipher().doFinal(challengeResult);
+            Cipher cipher= Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
+            cipher.init( Cipher.ENCRYPT_MODE,user.getPublicKey());
+            challenge=cipher.doFinal(challengeResult);
         }catch(Exception e){
             Logger.w("failed to generate challenge: %s",e.getMessage());
             challenge=null;
@@ -26,15 +32,17 @@ public class RSAChallenge implements IChallenge{
     }
 
     public byte[] get() {
+        Logger.i("challenge get: %s",Arrays.toString(challenge));
         return challenge;
     }
 
     public boolean submit(byte[] response) {
+        Logger.i("challenge submit: %s",Arrays.toString(response));
         boolean result;
         if (challenge==null){
             result=false;
         }else{
-            result=Arrays.equals(challenge,challengeResult);
+            result=Arrays.equals(response,challengeResult);
         }
         return result;
     }

@@ -45,14 +45,15 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
         ClientType clientType;
 
         getSocket().getOutputStream().write("Welcome to JavaChatNT. Press [enter] to continue...".getBytes());
+        int identifierByte=readInputStreamByte();
 
-        if (readInputStreamByte()==0xFF){
+        if (identifierByte==0xFF){
             clientType=ClientType.PACKETCHAT_CLIENT;
             //read the remaining bytes of hello packet to make sure alignment is correct.
             for (int i=0;i<7;i++) readInputStreamByte();
         }else{
             clientType=ClientType.TELNET_CLIENT;
-            while (readInputStreamByte()!=LINE_FEED);
+            while (identifierByte!=LINE_FEED) identifierByte=readInputStreamByte();
         }
 
         return clientType;

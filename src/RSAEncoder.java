@@ -4,8 +4,6 @@ import java.security.Key;
 import java.security.KeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -76,16 +74,16 @@ public class RSAEncoder {
         
     }
 
-    public PublicKey publicDecode(byte[] data) throws InvalidKeySpecException{
+    public RSAPublicKey publicDecode(byte[] data) throws InvalidKeySpecException{
         SimpleEntry<BigInteger,BigInteger> pair=readData(data);
         RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(pair.getValue(),pair.getKey());
-        return keyFactory.generatePublic(publicKeySpec);
+        return (RSAPublicKey)keyFactory.generatePublic(publicKeySpec);
     }
 
-    public PrivateKey privateDecode(byte[] data) throws InvalidKeySpecException{
+    public RSAPrivateKey privateDecode(byte[] data) throws InvalidKeySpecException{
         SimpleEntry<BigInteger,BigInteger> pair=readData(data);
         RSAPrivateKeySpec publicKeySpec = new RSAPrivateKeySpec(pair.getValue(),pair.getKey());
-        return keyFactory.generatePrivate(publicKeySpec);
+        return (RSAPrivateKey)keyFactory.generatePrivate(publicKeySpec);
     }
 
     

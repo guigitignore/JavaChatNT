@@ -1,15 +1,12 @@
-import java.security.PublicKey;
-import javax.crypto.Cipher;
+import java.security.interfaces.RSAPublicKey;
 
 public class RSAUser extends User{
 
-    private Cipher cipher;
+    private RSAPublicKey publicKey;
 
     public RSAUser(String name,byte[] key,String tag) throws Exception{
         super(name,key,tag);
-        PublicKey publicKey=RSAEncoder.getInstance().publicDecode(key);
-        cipher= Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
-        cipher.init( Cipher.ENCRYPT_MODE,publicKey );
+        publicKey=(RSAPublicKey)RSAEncoder.getInstance().publicDecode(key);
     }
 
     public RSAUser(String name,byte[] key) throws Exception{
@@ -20,8 +17,8 @@ public class RSAUser extends User{
         return "RSA";
     }
 
-    public Cipher getCipher(){
-        return cipher;
+    public RSAPublicKey getPublicKey(){
+        return publicKey;
     }
 
     public IChallenge getChallenge() {

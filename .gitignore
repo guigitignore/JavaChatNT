@@ -3,4 +3,5 @@ out
 users.txt
 **/*.pub
 **/*.priv
+**/*.log
 .VSCodeCounter

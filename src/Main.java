@@ -1,9 +1,14 @@
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.security.Security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 class Main{
-    public static int DEFAULT_SERVER_PORT=2000;
+    public final static int DEFAULT_SERVER_PORT=2000;
+    public final static String CLIENT_LOGFILE="client.log";
+    public final static String SERVER_LOGFILE="server.log";
     public static void main(String[] args) {
         if (args.length<1){
             System.err.println("You must specify the mode in argument: server,connect,generate");
@@ -39,11 +44,16 @@ class Main{
             try{
                 Thread.sleep(100); //let time to logger to send messages to output
             }catch(InterruptedException e){}
-            
+            Logger.close();
         }));
     }
 
     public static void server(String... args){
+        try{
+            Logger.addOutput(new PrintStream(new FileOutputStream(SERVER_LOGFILE, true)));
+        }catch(IOException e){
+            Logger.e("Cannot write logs to \"%s\"",SERVER_LOGFILE);
+        }
         Logger.i("Starting engine...");
         new ServerChat(DEFAULT_SERVER_PORT,User.USER_TAG);
         new ServerChat(DEFAULT_SERVER_PORT+1,User.ADMIN_TAG);
@@ -58,9 +68,12 @@ class Main{
 
         for (String username:args){
             try{
-                new KeyGenerator(username);
+                RSAKeyPair keyPair=new RSAKeyPair();
+                Logger.i("Sucessfully generate RSA keypair");
+                keyPair.exportKeyPair(username);
+                Logger.i("Sucessfully export keypair");  
             }catch(Exception e){
-                Logger.e("Cannot generate keypair for user %s",username);
+                Logger.e("An error occured suring generation process for user %s: %s",username,e.getMessage());
             }
         }
     }
@@ -78,6 +91,13 @@ class Main{
                 port=Integer.parseInt(args[1]);
             }
             if (port<=0) throw new NumberFormatException("port must be greater than 0");
+
+            try{
+                Logger.addOutput(new PrintStream(new FileOutputStream(CLIENT_LOGFILE, true)));
+                Logger.removeSTDOUT();
+            }catch(IOException e){
+                Logger.e("Cannot open log file \"%s\": falling back on standard output",CLIENT_LOGFILE);
+            }
 
             try{
                 new ClientChat(host, port);

@@ -1,9 +1,13 @@
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.StringTokenizer;
 import java.util.stream.IntStream;
+
+import javax.crypto.Cipher;
 
 public class PacketChatTelnetInterface implements IPacketChatInterface {
     private final static int USERNAME_STATE=0;
@@ -14,13 +18,15 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
     private final static String PASSWORD_PROMPT="password: ";
     private final static String SENDER="user";
 
+    private RSAKeyPair userRsaKeyPair=null;
+    private byte[] challenge=null;
 
-    private InputStream input;
+    private BufferedReader input;
     private PrintStream output;
     private int state=USERNAME_STATE;
 
     public PacketChatTelnetInterface(InputStream input,PrintStream output){
-        this.input=input;
+        this.input=new BufferedReader(new InputStreamReader(input));
         this.output=output;
         output.print(USERNAME_PROMPT);
     }
@@ -30,24 +36,7 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
     }
 
     public PacketChatTelnetInterface() throws IOException{
-        this(System.in,System.out);
-    }
-
-    private String readLine() throws Exception{
-        int chr;
-
-        StringBuilder builder=new StringBuilder();
-        while (!Thread.interrupted()){
-            if (input.available()>0){
-                chr=input.read();
-                if (chr==-1) throw new IOException("end of stream");
-                if (chr==0xA) break;
-                builder.append((char)chr);
-            }
-            Thread.sleep(10);
-        }
-
-        return builder.toString();
+        this(new InterruptibleInputStream(),System.out);
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
@@ -69,7 +58,14 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                 break;
             case PacketChat.CHALLENGE:
                 state=CHALLENGE_STATE;
-                output.print(PASSWORD_PROMPT);
+                if (packet.getFieldsNumber()>0){
+                    challenge=packet.getField(0);
+                }else{
+                    output.print(PASSWORD_PROMPT);
+                }
+                synchronized(this){
+                    notify();
+                }
                 break;
 
             case PacketChat.SEND_MSG:
@@ -104,16 +100,35 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
         PacketChat packet=null;
         String line;
 
-        do{
+        if (state==USERNAME_STATE && userRsaKeyPair!=null){
             try{
-                line=readLine();
+                synchronized(this){
+                    wait();
+                }
+            }catch(InterruptedException e){
+                throw new PacketChatException("interruption");
+            }
+            if (challenge!=null){
+                try{
+                    Cipher cipher=Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
+                    cipher.init(Cipher.DECRYPT_MODE, userRsaKeyPair.getPrivate());
+                    packet=PacketChatFactory.createChallengePacket(cipher.doFinal(challenge));
+                }catch(Exception e){
+                    Logger.w("cannot solve challenge");
+                }
+            }
+        }
+
+        while (packet==null){
+            try{
+                line=input.readLine();
                 if (line.isEmpty()) continue;
             }catch(Exception e){
                 throw new PacketChatException(e.getMessage());
             }
             switch(state){
                 case USERNAME_STATE:
-                    packet=PacketChatFactory.createLoginPacket(line);
+                    packet=createAuthPacket(line);
                     break;
                 case CHALLENGE_STATE:
                     packet=PacketChatFactory.createChallengePacket(line.getBytes());
@@ -132,9 +147,8 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                     Logger.w("interface has entered in an uncontrolled state");
                     throw new PacketChatException("cannot handle this state");
             }
-        }while(packet==null);
+        }
         
-
         return packet;
     }
 
@@ -180,6 +194,20 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                 packet=PacketChatFactory.createMessagePacket(SENDER,"/"+command+" "+args);
         }
         
+        return packet;
+    }
+
+    private PacketChat createAuthPacket(String username){
+        PacketChat packet;
+
+        try{
+            userRsaKeyPair=RSAKeyPair.importKeyPair(username);
+            packet=PacketChatFactory.createLoginPacket(username, RSAEncoder.getInstance().encode(userRsaKeyPair.getPublic()));
+        }catch(Exception e){
+            Logger.w("cannot load user RSA key: %s. Falling back on password authentification",e.getMessage());
+            packet=PacketChatFactory.createLoginPacket(username);
+        }
+
         return packet;
     }
 }

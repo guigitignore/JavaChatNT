@@ -1,5 +1,3 @@
-import java.util.Random;
-
 public class RSARegisterChallenge implements IChallenge{
     private RSAUser user=null;
     private IChallenge challenge=null;
@@ -19,16 +17,8 @@ public class RSARegisterChallenge implements IChallenge{
     }
 
     public byte[] get() {
-        byte[] challengeBytes;
-
-        if (challenge==null){
-            //generate a fake challenge to not disclose existing user
-            challengeBytes=new byte[RSAChallenge.CHALLENGE_SIZE];
-            new Random().nextBytes(challengeBytes);
-            challengeBytes[0]&=0x7F;
-        }else{
-            challengeBytes=challenge.get();
-        }
+        byte[] challengeBytes=null;
+        if (challenge!=null) challengeBytes=challenge.get();
         return challengeBytes;
     }
 
