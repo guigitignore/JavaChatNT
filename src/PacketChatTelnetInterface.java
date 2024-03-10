@@ -98,7 +98,7 @@ public class PacketChatTelnetInterface implements IPacketChatInterface,IUserConn
         }
     }
 
-    public String readLine() throws PacketChatException{
+    private String readLine() throws PacketChatException{
         String line;
         try{
             line=input.readLine();
@@ -109,9 +109,8 @@ public class PacketChatTelnetInterface implements IPacketChatInterface,IUserConn
         return line;
     }
 
-    public PacketChat getPacketChat() throws PacketChatException {
-        PacketChat packet=null;
-        String line;
+    private PacketChat autoCompleteChallenge() throws PacketChatException{
+        PacketChat result=null;
 
         if (user!=null && userRsaKeyPair!=null){
             try{
@@ -125,13 +124,20 @@ public class PacketChatTelnetInterface implements IPacketChatInterface,IUserConn
                 try{
                     Cipher cipher=Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
                     cipher.init(Cipher.DECRYPT_MODE, userRsaKeyPair.getPrivate());
-                    packet=PacketChatFactory.createChallengePacket(cipher.doFinal(challenge));
+                    result=PacketChatFactory.createChallengePacket(cipher.doFinal(challenge));
                 }catch(Exception e){
                     Logger.w("cannot solve challenge");
                 }
             }
             userRsaKeyPair=null;
         }
+        return result;
+    }
+
+    public PacketChat getPacketChat() throws PacketChatException {
+        String line;
+
+        PacketChat packet=autoCompleteChallenge();
 
         while (packet==null){
             line=readLine();    
