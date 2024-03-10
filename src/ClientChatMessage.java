@@ -1,6 +1,6 @@
-public class ClientChatMessage extends LoopWorker implements IPacketChatOutput{
+public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,IUserConnection{
     public ClientChat client;
-    IPacketChatInterface messageInterface;
+    PacketChatTelnetInterface messageInterface;
 
     public ClientChatMessage(ClientChat client){
         super(client);
@@ -30,6 +30,10 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput{
 
     public void end() throws Exception {
         WorkerManager.getInstance().cancelAll();
+    }
+
+    public User getUser() {
+        return messageInterface.getUser();
     }
     
 }

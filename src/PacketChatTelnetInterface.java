@@ -9,17 +9,17 @@ import java.util.stream.IntStream;
 
 import javax.crypto.Cipher;
 
-public class PacketChatTelnetInterface implements IPacketChatInterface {
+public class PacketChatTelnetInterface implements IPacketChatInterface,IUserConnection {
     private final static int USERNAME_STATE=0;
     private final static int CHALLENGE_STATE=1;
     private final static int CONNECTED_STATE=2;
 
     private final static String USERNAME_PROMPT="username: ";
     private final static String PASSWORD_PROMPT="password: ";
-    private final static String SENDER="user";
 
     private RSAKeyPair userRsaKeyPair=null;
     private byte[] challenge=null;
+    private User user=null;
 
     private BufferedReader input;
     private PrintStream output;
@@ -53,6 +53,8 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                     }else{
                         output.println("Connection failure.");
                     }
+                    user=null;
+
                     output.print(USERNAME_PROMPT);
                 }
                 break;
@@ -96,11 +98,22 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
         }
     }
 
+    public String readLine() throws PacketChatException{
+        String line;
+        try{
+            line=input.readLine();
+            if (line==null) throw new PacketChatException("null line");
+        }catch(IOException e){
+            throw new PacketChatException(e.getMessage());
+        }
+        return line;
+    }
+
     public PacketChat getPacketChat() throws PacketChatException {
         PacketChat packet=null;
         String line;
 
-        if (state==USERNAME_STATE && userRsaKeyPair!=null){
+        if (user!=null && userRsaKeyPair!=null){
             try{
                 synchronized(this){
                     wait();
@@ -117,15 +130,13 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                     Logger.w("cannot solve challenge");
                 }
             }
+            userRsaKeyPair=null;
         }
 
         while (packet==null){
-            try{
-                line=input.readLine();
-                if (line.isEmpty()) continue;
-            }catch(Exception e){
-                throw new PacketChatException(e.getMessage());
-            }
+            line=readLine();    
+            if (line.isEmpty()) continue;
+            
             switch(state){
                 case USERNAME_STATE:
                     packet=createAuthPacket(line);
@@ -140,7 +151,7 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                         String args=tokens.hasMoreTokens()?tokens.nextToken("").strip():"";
                         packet=handleClientCommand(command, args);
                     }else{
-                        packet=PacketChatFactory.createMessagePacket(SENDER, line);
+                        packet=PacketChatFactory.createMessagePacket(getUser().getName(), line);
                     }
                     break;
                 default:
@@ -168,14 +179,14 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                     String dest=tokens.nextToken();
                     String message=tokens.nextToken("");
 
-                    packet=PacketChatFactory.createMessagePacket(SENDER,message,dest);
+                    packet=PacketChatFactory.createMessagePacket(getUser().getName(),message,dest);
                 }
                 break;
             case "sendmsgall":
                 if (args.isEmpty()){
                     output.println("Syntax: /sendMsgAll <message>");
                 }else{
-                    packet=PacketChatFactory.createMessagePacket(SENDER,args);
+                    packet=PacketChatFactory.createMessagePacket(getUser().getName(),args);
                 }
                 break;
             case "listusers":
@@ -191,7 +202,7 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                 //do not break to send help command to server side
             default:
                 //server side command
-                packet=PacketChatFactory.createMessagePacket(SENDER,"/"+command+" "+args);
+                packet=PacketChatFactory.createMessagePacket(getUser().getName(),"/"+command+" "+args);
         }
         
         return packet;
@@ -202,12 +213,21 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
 
         try{
             userRsaKeyPair=RSAKeyPair.importKeyPair(username);
-            packet=PacketChatFactory.createLoginPacket(username, RSAEncoder.getInstance().encode(userRsaKeyPair.getPublic()));
+            user=new RSAUser(username, RSAEncoder.getInstance().encode(userRsaKeyPair.getPublic()));
+            packet=PacketChatFactory.createLoginPacket(user.getName(), user.getKey());
         }catch(Exception e){
             Logger.w("cannot load user RSA key: %s. Falling back on password authentification",e.getMessage());
-            packet=PacketChatFactory.createLoginPacket(username);
+            user=new PasswordUser(username,"");
+            packet=PacketChatFactory.createLoginPacket(user.getName());
         }
 
         return packet;
+    }
+
+    public User getUser() {
+        User result;
+        if (state==CONNECTED_STATE) result=this.user;
+        else result=null;
+        return result;
     }
 }

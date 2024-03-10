@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 
-public class ClientChat extends SocketWorker implements IPacketChatInterface{
+public class ClientChat extends SocketWorker implements IPacketChatInterface,IUserConnection{
 
     private IPacketChatInterface packetInterface;
 
@@ -46,6 +46,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface{
     private void mainloop() throws IOException{
         PacketChat packet;
         byte command;
+        PacketChatSanitizer sanitizer=new PacketChatSanitizer(this);
 
         while (true){
             try{
@@ -56,6 +57,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface{
                 break;
             }
             try{
+                sanitizer.sanitize(packet);
                 command=packet.getCommand();
                 if (command==PacketChat.FILE_INIT || command==PacketChat.FILE_DATA || command==PacketChat.FILE_OVER){
                     clientFile.putPacketChat(packet);
@@ -63,7 +65,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface{
                     clientMessage.putPacketChat(packet);
                 }
             }catch(PacketChatException e){
-                Logger.w("Packet dropped");
+                Logger.w("Packet dropped: %s",e.getMessage());
             }
             
         }
@@ -88,6 +90,10 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface{
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
         packetInterface.putPacketChat(packet);
+    }
+
+    public User getUser() {
+        return clientMessage.getUser();
     }
     
 }

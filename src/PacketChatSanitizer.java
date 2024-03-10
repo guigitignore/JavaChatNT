@@ -1,7 +1,7 @@
 public class PacketChatSanitizer {
-    private ServiceChat client;
+    private IUserConnection client;
 
-    public PacketChatSanitizer(ServiceChat client){
+    public PacketChatSanitizer(IUserConnection client){
         this.client=client;
     }
 
