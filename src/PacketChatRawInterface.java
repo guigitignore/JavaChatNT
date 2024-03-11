@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 
 //stateless class
 public class PacketChatRawInterface implements IPacketChatInterface{
@@ -9,9 +8,9 @@ public class PacketChatRawInterface implements IPacketChatInterface{
     private InputStream input;
     private OutputStream output;
 
-    public PacketChatRawInterface(Socket socket) throws IOException{
-        input=socket.getInputStream();
-        output=socket.getOutputStream();
+    public PacketChatRawInterface(InputStream input,OutputStream output){
+        this.input=input;
+        this.output=output;
     }
 
     public PacketChat getPacketChat() throws PacketChatException{

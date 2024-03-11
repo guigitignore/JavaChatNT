@@ -38,7 +38,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         skipWelcomeMessage();
         sendHelloPacket();
 
-        packetInterface=new PacketChatRawInterface(getSocket());
+        packetInterface=new PacketChatRawInterface(getSocket().getInputStream(),getSocket().getOutputStream());
         clientMessage=new ClientChatMessage(this);
         clientFile=new ClientChatFile(this);
     }
@@ -57,7 +57,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
                 break;
             }
             try{
-                sanitizer.sanitize(packet);
+                sanitizer.client(packet);
                 command=packet.getCommand();
                 if (command==PacketChat.FILE_INIT || command==PacketChat.FILE_DATA || command==PacketChat.FILE_OVER){
                     clientFile.putPacketChat(packet);
@@ -72,6 +72,8 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     public void run(){
+        Logger.removeSTDOUT();
+
         try{
             initStreams();
             mainloop();

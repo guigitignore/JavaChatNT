@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.Socket;
 
 
@@ -64,10 +65,10 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
             
         switch (clientType) {
             case PACKETCHAT_CLIENT:
-                packetChatInterface=new PacketChatRawInterface(getSocket());
+                packetChatInterface=new PacketChatRawInterface(getSocket().getInputStream(),getSocket().getOutputStream());
                 break;
             case TELNET_CLIENT:
-                packetChatInterface=new PacketChatTelnetInterface(getSocket());
+                packetChatInterface=new PacketChatTelnetInterface(getSocket().getInputStream(),new PrintStream(getSocket().getOutputStream()));
                 break;
             default:
                 throw new IOException("Unhandled client type");

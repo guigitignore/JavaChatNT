@@ -5,51 +5,25 @@ public class PacketChatSanitizer {
         this.client=client;
     }
 
-    private void sanitizeAuthPacket(PacketChat packet) throws PacketChatException{
-        if (packet.getFieldsNumber()==0){
-            throw new PacketChatException("missing mandatory field in auth packet");
-        }
-    }
-
-    private void sanitizeChallengePacket(PacketChat packet) throws PacketChatException{
-        if (packet.getFieldsNumber()==0){
-            packet.addField(new byte[0]);
-        }
-    }
-
     private void sanitizeMessagePacket(PacketChat packet) throws PacketChatException{
-        String senderName;
-        int fieldsNumber=packet.getFieldsNumber();
-
-        if (fieldsNumber<2){
+        if (packet.getFieldsNumber()<2){
             throw new PacketChatException("Insuficiant arguments number");
         }
-        switch (client.getUser().getTag()){
-            case User.ADMIN_TAG:
-                senderName=String.format("{%s}", client.getUser().getName());
-                break;
-            case User.USER_TAG:
-                senderName=String.format("<%s>", client.getUser().getName());
-                break;
-            default:
-                senderName="%unknown%";
-                break;
-        }
-        packet.replaceField(0, senderName.getBytes());
     }
 
-    private void sanitizeListUserPacket(PacketChat packet) throws PacketChatException{
-        packet.clearFields();
-    }
+    private void serverLogoutSanitize(PacketChat packet) throws PacketChatException{
+        int packetFieldNumber=packet.getFieldsNumber();
 
-
-    private void logoutSanitize(PacketChat packet) throws PacketChatException{
         switch(packet.getCommand()){
             case PacketChat.AUTH:
-                sanitizeAuthPacket(packet);
+                if (packetFieldNumber==0){
+                    throw new PacketChatException("missing mandatory field in auth packet");
+                }
                 break;
             case PacketChat.CHALLENGE:
-                sanitizeChallengePacket(packet);
+                if (packetFieldNumber==0){
+                    packet.addField(new byte[0]);
+                }
                 break;
             default:
                 throw new PacketChatException("Unauthorized packet type");
@@ -57,24 +31,41 @@ public class PacketChatSanitizer {
     }
 
 
-    private void loginSanitize(PacketChat packet) throws PacketChatException{
+    private void serverLoginSanitize(PacketChat packet) throws PacketChatException{
         switch(packet.getCommand()){
             case PacketChat.SEND_MSG:
                 sanitizeMessagePacket(packet);
+                packet.replaceField(0,client.getUser().getName().getBytes());
                 break;
             case PacketChat.LIST_USERS:
-                sanitizeListUserPacket(packet);
+                packet.clearFields();
                 break;
             default:
                 throw new PacketChatException("Unknown packet type");
         }
     }
 
-    public void sanitize(PacketChat packet) throws PacketChatException{
+    public void clientLogoutSanitize(PacketChat packet) throws PacketChatException{
+
+    }
+
+    public void clientLoginSanitize(PacketChat packet) throws PacketChatException{
+        
+    }
+
+    public void server(PacketChat packet) throws PacketChatException{
         if (client.getUser()==null){
-            logoutSanitize(packet);
+            serverLogoutSanitize(packet);
         }else{
-            loginSanitize(packet);
+            serverLoginSanitize(packet);
+        }
+    }
+
+    public void client(PacketChat packet) throws PacketChatException{
+        if (client.getUser()==null){
+            clientLogoutSanitize(packet);
+        }else{
+            clientLoginSanitize(packet);
         }
     }
 }

@@ -94,7 +94,6 @@ class Main{
 
             try{
                 Logger.addOutput(new PrintStream(new FileOutputStream(CLIENT_LOGFILE, true)));
-                Logger.removeSTDOUT();
             }catch(IOException e){
                 Logger.e("Cannot open log file \"%s\": falling back on standard output",CLIENT_LOGFILE);
             }
@@ -106,7 +105,7 @@ class Main{
                 System.exit(-1);
             }
         }catch(NumberFormatException e){
-            System.err.println("Invalid port number!");
+            Logger.e("Invalid port number!");
             System.exit(-1);
         }
             

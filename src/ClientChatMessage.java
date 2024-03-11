@@ -1,4 +1,13 @@
+import java.util.StringTokenizer;
+
+import javax.crypto.Cipher;
+
 public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,IUserConnection{
+    public final static String SENDER="[CLIENTCHAT]";
+    private RSAKeyPair userKeyPair=null;
+    private User user=null;
+    private boolean connected=false;
+
     public ClientChat client;
     PacketChatTelnetInterface messageInterface;
 
@@ -11,7 +20,8 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
-        messageInterface.putPacketChat(packet);
+        packet=handleIncomingPacket(packet);
+        if (packet!=null) messageInterface.putPacketChat(packet);
     }
 
     public void setup() throws Exception {
@@ -19,13 +29,13 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
     }
 
     public void init() throws Exception {
-        messageInterface=new PacketChatTelnetInterface();
+        messageInterface=new PacketChatTelnetInterface(new InterruptibleInputStream(),System.out);
     }
 
     public void loop() throws Exception {
         PacketChat packet=messageInterface.getPacketChat();
-
-        client.putPacketChat(packet);
+        packet=handleOutgoingPacket(packet);
+        if (packet!=null) client.putPacketChat(packet);
     }
 
     public void end() throws Exception {
@@ -33,7 +43,104 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
     }
 
     public User getUser() {
-        return messageInterface.getUser();
+        User result;
+        if (connected) result=user;
+        else result=null;
+        return result;
+    }
+
+    public void handleOutgoingAuthPacket(PacketChat packet){
+        String username=new String(packet.getField(0));
+        try{
+            userKeyPair=RSAKeyPair.importKeyPair(username);
+            user=new RSAUser(username, RSAEncoder.getInstance().encode(userKeyPair.getPublic()));
+            packet.addField(user.getKey());
+        }catch(Exception e){
+            Logger.w("cannot load user RSA key: %s. Falling back on password authentification",e.getMessage());
+            user=new PasswordUser(username,"");
+        }
+    }
+
+    public void sendMessageToClient(String format,Object...args){
+        try{
+            messageInterface.putPacketChat(PacketChatFactory.createMessagePacket(SENDER, String.format(format, args)));
+        }catch(PacketChatException e){
+            Logger.w("Cannot send message to client: %s",e.getMessage());
+        }
+    }
+
+    public PacketChat handleOutgoingMessagePacket(PacketChat packet){
+        String message=new String(packet.getField(1));
+        StringBuilder builder;
+        StringTokenizer tokens;
+
+        //insert name to be complient
+        packet.replaceField(0,user.getName().getBytes());
+
+        if (message.startsWith("/")){
+            tokens=new StringTokenizer(message," ");
+            String command=tokens.nextToken().substring(1).toLowerCase();
+            String args=tokens.hasMoreTokens()?tokens.nextToken("").strip():"";
+
+            switch (command){
+                
+                case "sendFileTo":
+                    //not forward packet
+                    tokens=new StringTokenizer(args," ");
+                    if (tokens.countTokens()<2){
+                        sendMessageToClient("this command expects 2 arguments");
+                    }
+                    packet=null;
+                    break;
+
+                case "help":
+                    builder=new StringBuilder();
+                    builder.append("list of heavy client commands:\n");
+                    builder.append("/sendFileTo - send message to a client\n");
+                    builder.append("/sendFileToAll - send message to all\n");
+                    builder.append("/help - print help menu\n");
+
+                    sendMessageToClient(builder.toString());
+
+                    break;
+            }
+        }
+        return packet;
     }
     
+    public PacketChat handleOutgoingPacket(PacketChat packet){
+        switch (packet.getCommand()){
+            case PacketChat.AUTH:
+                handleOutgoingAuthPacket(packet);
+                break;
+
+            case PacketChat.SEND_MSG:
+                packet=handleOutgoingMessagePacket(packet);
+                break;
+        }
+
+        return packet;
+    }
+
+    public PacketChat handleIncomingPacket(PacketChat packet){
+        switch(packet.getCommand()){
+            case PacketChat.CHALLENGE:
+                if (packet.getFieldsNumber()>=1 && userKeyPair!=null){
+                    try{
+                        Cipher cipher=Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
+                        cipher.init(Cipher.DECRYPT_MODE, userKeyPair.getPrivate());
+                        client.putPacketChat(PacketChatFactory.createChallengePacket(cipher.doFinal(packet.getField(0))));
+                    }catch(Exception e){
+                        Logger.w("cannot solve challenge: %s",e.getMessage());
+                    }
+                    //drop packet
+                    packet=null;
+                }
+                break;
+            case PacketChat.AUTH:
+                if (packet.getStatus()==PacketChat.STATUS_SUCCESS) connected=true;
+                break;
+        }
+        return packet;
+    }
 }

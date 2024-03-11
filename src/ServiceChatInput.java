@@ -62,7 +62,21 @@ public class ServiceChatInput implements IPacketChatOutput{
     }
 
     private void handleMessagePacket(PacketChat packet) throws PacketChatException{
+        String senderName=new String(packet.getField(0));
         String message=new String(packet.getField(1));
+
+        switch (client.getUser().getTag()){
+            case User.ADMIN_TAG:
+                senderName=String.format("{%s}", senderName);
+                break;
+            case User.USER_TAG:
+                senderName=String.format("<%s>", senderName);
+                break;
+            default:
+                senderName="%unknown%";
+                break;
+        }
+        packet.replaceField(0, senderName.getBytes());
 
         if (message.startsWith("/")){
             StringTokenizer tokens=new StringTokenizer(message," ");
@@ -101,7 +115,7 @@ public class ServiceChatInput implements IPacketChatOutput{
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
         Logger.i("got packet: %s",packet);
-        sanitizer.sanitize(packet);
+        sanitizer.server(packet);
 
         switch(packet.getCommand()){
             case PacketChat.AUTH:
