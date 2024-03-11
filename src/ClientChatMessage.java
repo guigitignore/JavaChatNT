@@ -84,11 +84,13 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
 
             switch (command){
                 
-                case "sendFileTo":
+                case "sendfileto":
                     //not forward packet
                     tokens=new StringTokenizer(args," ");
                     if (tokens.countTokens()<2){
                         sendMessageToClient("this command expects 2 arguments");
+                    }else{
+                        
                     }
                     packet=null;
                     break;
