@@ -89,7 +89,7 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
 
     public void sendFile(String filename,String dest){
         PacketChat packet;
-        packet=PacketChatFactory.createFileInitPacket(getUser().getName(), filename, dest);
+        packet=PacketChatFactory.createFileInitPacket((byte)0,getUser().getName(), filename, dest);
         try{
             client.putPacketChat(packet);
         }catch(PacketChatException e){

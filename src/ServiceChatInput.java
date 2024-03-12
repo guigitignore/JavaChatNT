@@ -49,7 +49,12 @@ public class ServiceChatInput implements IPacketChatOutput{
                     client.getOutput().sendAuthSuccess();
                     ServerChatManager.getInstance().register(client);
                     //send list of connected users
-                    client.getOutput().sendListUser(ServerChatManager.getInstance().getUsers());
+                    if (client.getClientType()==ClientType.TELNET_CLIENT){
+                        //send server command
+                        client.getInput().sendMessage("/listusers");
+                    }else{
+                        client.getOutput().sendListUser(ServerChatManager.getInstance().getUsers());
+                    }
                 }else{
                     client.getOutput().sendAuthFailure("Unauthorized connection");
                 }
@@ -122,14 +127,14 @@ public class ServiceChatInput implements IPacketChatOutput{
             dest=ServerChatManager.getInstance().getClient(destName);
 
             if (dest==null){
-                client.getOutput().sendFileInitFailure();
+                client.getOutput().sendFileInitFailure(nounce);
                 throw new PacketChatException("cannot find target user: %s",destName);
             }else if (client.getClientType()==ClientType.TELNET_CLIENT){
-                client.getOutput().sendFileInitFailure();
+                client.getOutput().sendFileInitFailure(nounce);
                 throw new PacketChatException("cannot send file to a telnet client");
             }else{
                 if (client.getOutgoingFiles().registerNounce(nounce,destName)==false){
-                    client.getOutput().sendFileInitFailure();
+                    client.getOutput().sendFileInitFailure(nounce);
                     throw new PacketChatException("cannot register nounce");
                 }
                 dest.getOutput().sendPacket(packet);

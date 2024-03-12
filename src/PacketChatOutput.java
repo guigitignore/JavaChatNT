@@ -53,11 +53,11 @@ public class PacketChatOutput {
         sendPacket(PacketChatFactory.createListUserPacket(users));
     }
 
-    public void sendFileInitSucess() throws PacketChatException{
-        sendPacket(PacketChatFactory.createFileInitStatus(true));
+    public void sendFileInitSucess(byte nounce) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileInitStatus(nounce,true));
     }
 
-    public void sendFileInitFailure() throws PacketChatException{
-        sendPacket(PacketChatFactory.createFileInitStatus(false));
+    public void sendFileInitFailure(byte nounce) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileInitStatus(nounce,false));
     }
 }

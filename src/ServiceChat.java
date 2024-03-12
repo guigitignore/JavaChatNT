@@ -71,7 +71,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
     }
 
     private void setupClientInterface() throws IOException{
-        ClientType clientType=identifyClientType();
+        clientType=identifyClientType();
             
         switch (clientType) {
             case PACKETCHAT_CLIENT:

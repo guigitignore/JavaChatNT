@@ -68,7 +68,7 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createFileInitPacket(String sender,String filename,String dest){
+    public static PacketChat createFileInitPacket(byte nounce,String sender,String filename,String dest){
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.FILE_INIT);
@@ -78,7 +78,7 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createFileInitStatus(boolean status){
+    public static PacketChat createFileInitStatus(byte nounce,boolean status){
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.FILE_INIT);

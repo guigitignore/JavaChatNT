@@ -62,14 +62,6 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                     output.printf("%s %s\n",sender,message);
                 }
                 break;
-            
-            case PacketChat.LIST_USERS:
-                output.println("List of connected users:");
-                for (byte[] user:packet.getFields()){
-                    output.println("-"+new String(user));
-                }
-                break;
-
             default:
                 Logger.w("Unhandled packet type: %d",packet.getCommand());
                 break;
@@ -146,9 +138,6 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                 }else{
                     packet=PacketChatFactory.createMessagePacket(SENDER,args);
                 }
-                break;
-            case "listusers":
-                packet=PacketChatFactory.createListUserPacket();
                 break;
             case "help":
                 output.println("list of available client commands:");
