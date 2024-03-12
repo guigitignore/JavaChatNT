@@ -52,8 +52,6 @@ public class ServiceChatInput implements IPacketChatOutput{
                     if (client.getClientType()==ClientType.TELNET_CLIENT){
                         //send server command
                         client.getInput().sendMessage("/listusers");
-                    }else{
-                        client.getOutput().sendListUser(ServerChatManager.getInstance().getUsers());
                     }
                 }else{
                     client.getOutput().sendAuthFailure("Unauthorized connection");
