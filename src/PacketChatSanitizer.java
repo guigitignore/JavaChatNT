@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class PacketChatSanitizer {
     private IUserConnection client;
 
@@ -5,10 +7,19 @@ public class PacketChatSanitizer {
         this.client=client;
     }
 
-    private void sanitizeMessagePacket(PacketChat packet) throws PacketChatException{
-        if (packet.getFieldsNumber()<2){
-            throw new PacketChatException("Insuficiant arguments number");
+    private void sanitizePacketVAArgs(PacketChat packet,int minNumber) throws PacketChatException{
+        if (packet.getFieldsNumber()<minNumber){
+            throw new PacketChatException("expecting at least %d arguments",minNumber);
         }
+    }
+
+    private void sanitizePacketArgsNumber(PacketChat packet,int...argsNumber) throws PacketChatException{
+        int packetFieldNumber=packet.getFieldsNumber();
+
+        for (int argNumber:argsNumber){
+            if (argNumber==packetFieldNumber) return;
+        }
+        throw new PacketChatException("Wrong arguments number: support only %s argument(s)",Arrays.toString(argsNumber));
     }
 
     private void serverLogoutSanitize(PacketChat packet) throws PacketChatException{
@@ -34,11 +45,26 @@ public class PacketChatSanitizer {
     private void serverLoginSanitize(PacketChat packet) throws PacketChatException{
         switch(packet.getCommand()){
             case PacketChat.SEND_MSG:
-                sanitizeMessagePacket(packet);
+                sanitizePacketVAArgs(packet, 2);
                 packet.replaceField(0,client.getUser().getName().getBytes());
                 break;
             case PacketChat.LIST_USERS:
                 packet.clearFields();
+                break;
+            case PacketChat.FILE_INIT:
+                sanitizePacketArgsNumber(packet, 0,3);
+                if (packet.getFieldsNumber()>0) packet.replaceField(0,client.getUser().getName().getBytes());
+                break;
+            case PacketChat.FILE_DATA:
+                sanitizePacketArgsNumber(packet, 3);
+                if (packet.getFieldsNumber()>0) packet.replaceField(0,client.getUser().getName().getBytes());
+                break;
+            case PacketChat.FILE_ACK:
+                packet.clearFields();
+                break;
+            case PacketChat.FILE_OVER:
+                sanitizePacketArgsNumber(packet, 0,2);
+                if (packet.getFieldsNumber()>0) packet.replaceField(0,client.getUser().getName().getBytes());
                 break;
             default:
                 throw new PacketChatException("Unknown packet type");
@@ -46,11 +72,41 @@ public class PacketChatSanitizer {
     }
 
     public void clientLogoutSanitize(PacketChat packet) throws PacketChatException{
-
+        switch(packet.getCommand()){
+            case PacketChat.AUTH:
+                packet.clearFields();
+                break;
+            case PacketChat.CHALLENGE:
+                sanitizePacketArgsNumber(packet, 0,1);
+                break;
+            default:
+                throw new PacketChatException("Unauthorized packet type");
+        }
     }
 
     public void clientLoginSanitize(PacketChat packet) throws PacketChatException{
-        
+        switch(packet.getCommand()){
+            case PacketChat.SEND_MSG:
+                sanitizePacketVAArgs(packet, 2);
+                break;
+            case PacketChat.LIST_USERS:
+                sanitizePacketVAArgs(packet, 1);
+                break;
+            case PacketChat.FILE_INIT:
+                sanitizePacketArgsNumber(packet, 3);
+                break;
+            case PacketChat.FILE_DATA:
+                sanitizePacketArgsNumber(packet, 3);
+                break;
+            case PacketChat.FILE_ACK:
+                packet.clearFields();
+                break;
+            case PacketChat.FILE_OVER:
+                sanitizePacketArgsNumber(packet, 2);
+                break;
+            default:
+                throw new PacketChatException("Unauthorized packet type");
+        }
     }
 
     public void server(PacketChat packet) throws PacketChatException{

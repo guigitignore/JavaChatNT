@@ -67,4 +67,23 @@ public class PacketChatFactory{
         }
         return packet;
     }
+
+    public static PacketChat createFileInitPacket(String sender,String filename,String dest){
+        PacketChat packet=new PacketChat();
+
+        packet.setCommand(PacketChat.FILE_INIT);
+        packet.addField(sender.getBytes());
+        packet.addField(filename.getBytes());
+        packet.addField(dest.getBytes());
+        return packet;
+    }
+
+    public static PacketChat createFileInitStatus(boolean status){
+        PacketChat packet=new PacketChat();
+
+        packet.setCommand(PacketChat.FILE_INIT);
+        if (status) packet.setStatus(PacketChat.STATUS_SUCCESS);
+        else packet.setStatus(PacketChat.STATUS_ERROR);
+        return packet;
+    }
 }

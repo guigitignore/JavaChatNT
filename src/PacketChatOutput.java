@@ -52,4 +52,12 @@ public class PacketChatOutput {
     public void sendListUser(Collection<String> users) throws PacketChatException{
         sendPacket(PacketChatFactory.createListUserPacket(users));
     }
+
+    public void sendFileInitSucess() throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileInitStatus(true));
+    }
+
+    public void sendFileInitFailure() throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileInitStatus(false));
+    }
 }

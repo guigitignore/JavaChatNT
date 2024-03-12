@@ -1,6 +1,8 @@
+import java.io.File;
 import java.util.StringTokenizer;
 
 import javax.crypto.Cipher;
+
 
 public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,IUserConnection{
     public final static String SENDER="[CLIENTCHAT]";
@@ -69,6 +71,63 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
         }
     }
 
+    public boolean checkFile(String filename){
+        boolean result=false;
+
+        File file=new File(filename);
+        if (file.exists()){
+            if (!file.isFile()){
+                sendMessageToClient("File \"%s\" is not a file", filename);
+            }else{
+                result=true;
+            }
+        }else{
+            sendMessageToClient("File \"%s\" does not exists", filename);
+        }
+        return result;
+    }
+
+    public void sendFile(String filename,String dest){
+        PacketChat packet;
+        packet=PacketChatFactory.createFileInitPacket(getUser().getName(), filename, dest);
+        try{
+            client.putPacketChat(packet);
+        }catch(PacketChatException e){
+            Logger.w("Cannot send file init request");
+        }
+        
+    }
+
+    public void sendFileTo(String args){
+        StringTokenizer tokens=new StringTokenizer(args," ");
+        String filename;
+        String dest;
+
+        if (tokens.countTokens()<2){
+            sendMessageToClient("this command expects 2 arguments");
+        }else{
+            filename=tokens.nextToken();
+            dest=tokens.nextToken();
+
+            if (checkFile(filename)){
+                sendFile(filename,dest);
+            }
+        }
+    }
+
+    public void sendFileToAll(String filename){
+        if (checkFile(filename)){
+            /* 
+            for (String username:ServerChatManager.getInstance().getUsers()){
+                //not send to user itself
+                if (!username.equals(getUser().getName())){
+                    sendFile(filename, username);
+                }
+            }
+            */
+        }
+    }
+
     public PacketChat handleOutgoingMessagePacket(PacketChat packet){
         String message=new String(packet.getField(1));
         StringBuilder builder;
@@ -86,12 +145,11 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
                 
                 case "sendfileto":
                     //not forward packet
-                    tokens=new StringTokenizer(args," ");
-                    if (tokens.countTokens()<2){
-                        sendMessageToClient("this command expects 2 arguments");
-                    }else{
-                        
-                    }
+                    sendFileTo(args);
+                    packet=null;
+                    break;
+                case "sendfiletoall":
+                    sendFileToAll(args);
                     packet=null;
                     break;
 

@@ -13,6 +13,7 @@ public class PacketChat {
     public final static byte FILE_INIT =          (byte)0x05;
     public final static byte FILE_DATA =          (byte)0x06;
     public final static byte FILE_OVER =          (byte)0x07;
+    public final static byte FILE_ACK =           (byte)0x08;
     public final static byte HELLO =              (byte)0xFF;
 
     public final static byte STATUS_SUCCESS=      (byte)0x00;

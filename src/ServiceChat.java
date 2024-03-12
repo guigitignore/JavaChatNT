@@ -9,6 +9,8 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
     private ServiceChatOutput outputServiceChat=null;
     private IPacketChatInterface packetChatInterface=null;
     private ClientType clientType;
+    private NounceManager incomingFiles=new NounceManager();
+    private NounceManager outgoingFiles=new NounceManager();
 
     private final static int LINE_FEED=10;
 
@@ -34,6 +36,14 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
 
     public ClientType getClientType(){
         return clientType;
+    }
+
+    public NounceManager getIncomingFiles(){
+        return incomingFiles;
+    }
+
+    public NounceManager getOutgoingFiles(){
+        return outgoingFiles;
     }
 
     private int readInputStreamByte() throws IOException{

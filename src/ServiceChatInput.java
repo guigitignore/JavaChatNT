@@ -112,6 +112,83 @@ public class ServiceChatInput implements IPacketChatOutput{
         client.getOutput().sendListUser(ServerChatManager.getInstance().getUsers());
     }
 
+    private void handleFileInitPacket(PacketChat packet) throws PacketChatException{
+        String destName;
+        ServiceChat dest;
+        byte nounce=packet.getParam();
+
+        if (packet.getFieldsNumber()>0){
+            destName=new String(packet.getField(2));
+            dest=ServerChatManager.getInstance().getClient(destName);
+
+            if (dest==null){
+                client.getOutput().sendFileInitFailure();
+                throw new PacketChatException("cannot find target user: %s",destName);
+            }else if (client.getClientType()==ClientType.TELNET_CLIENT){
+                client.getOutput().sendFileInitFailure();
+                throw new PacketChatException("cannot send file to a telnet client");
+            }else{
+                if (client.getOutgoingFiles().registerNounce(nounce,destName)==false){
+                    client.getOutput().sendFileInitFailure();
+                    throw new PacketChatException("cannot register nounce");
+                }
+                dest.getOutput().sendPacket(packet);
+            }
+        }else{
+            client.getIncomingFiles().allowNounce(nounce);
+            handleFileAckPacket(packet);
+        }
+    }
+
+    private void handleFilePacket(PacketChat packet,String destName) throws PacketChatException{
+        if (client.getOutgoingFiles().isNounceAllowed(packet.getParam(), destName)){
+            ServiceChat dest=ServerChatManager.getInstance().getClient(destName);
+
+            if (dest==null){
+                //remove nounce if client is disconnected
+                client.getOutgoingFiles().removeNounce(packet.getParam());
+                throw new PacketChatException("cannot find target user: %s",destName);
+            }
+            dest.getOutput().sendPacket(packet);
+        }else{
+            throw new PacketChatException("transaction not allowed");
+        }
+    }
+
+    private void handleFileDataPacket(PacketChat packet) throws PacketChatException{
+        handleFilePacket(packet,new String(packet.getField(2)));
+    }
+
+    private void handleFileOverPacket(PacketChat packet) throws PacketChatException{
+        byte nounce=packet.getParam();
+
+        if (packet.getFieldsNumber()>0){
+            handleFilePacket(packet,new String(packet.getField(1)));
+        }else{
+            handleFileAckPacket(packet);
+            client.getIncomingFiles().removeNounce(nounce);
+        }
+    }
+
+    private void handleFileAckPacket(PacketChat packet) throws PacketChatException{
+        String destName;
+        ServiceChat dest;
+        byte nounce=packet.getParam();
+
+        if (client.getIncomingFiles().isNounceAllowed(nounce)){
+            destName=client.getIncomingFiles().getUsernameFromNounce(nounce);
+            dest=ServerChatManager.getInstance().getClient(destName);
+
+            if (dest==null){
+                client.getIncomingFiles().removeNounce(packet.getParam());
+                throw new PacketChatException("cannot find target user: %s",destName);
+            }
+            dest.getOutput().sendPacket(packet);
+        }else{
+            throw new PacketChatException("unauthorized nounce");
+        }
+    }
+
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
         Logger.i("got packet: %s",packet);
@@ -129,6 +206,15 @@ public class ServiceChatInput implements IPacketChatOutput{
                 break;
             case PacketChat.LIST_USERS:
                 handleListUserPacket(packet);
+                break;
+            case PacketChat.FILE_INIT:
+                handleFileInitPacket(packet);
+                break;
+            case PacketChat.FILE_DATA:
+                handleFileDataPacket(packet);
+                break;
+            case PacketChat.FILE_OVER:
+                handleFileOverPacket(packet);
                 break;
             default:
                 Logger.w("Cannot handle this packet: %s",packet);
