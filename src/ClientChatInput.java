@@ -25,15 +25,10 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
         privateKey=key;
     }
 
-    public void putPacketChat(PacketChat packet) throws PacketChatException {
-        
-        if (!isConnected.get()){
-            packet=handleLogoutPacket(packet);
-        }
-        
-        if (packet!=null){
-            client.getMessageInterface().putPacketChat(packet);
-        }
+    public void putPacketChat(PacketChat packet) throws PacketChatException {        
+        packet=isConnected.get()?handleLoginPacket(packet):handleLogoutPacket(packet);
+    
+        if (packet!=null) client.getMessageInterface().putPacketChat(packet);
     }
 
     public void setup() throws Exception {
@@ -67,6 +62,17 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
 
     public void end() throws Exception {
         WorkerManager.getInstance().cancelAll();
+    }
+
+    private PacketChat handleLoginPacket(PacketChat packet) throws PacketChatException{
+        switch(packet.getCommand()){
+            case PacketChat.FILE_INIT:
+                new ClientChatFileInput(client, packet);
+                packet=null;
+                break;
+        }
+
+        return packet;
     }
 
     private PacketChat handleLogoutPacket(PacketChat packet) throws PacketChatException{

@@ -158,17 +158,6 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         output.sendMessage(ClientChat.CLIENT_NAME,builder.toString());
     }
 
-    private void sendFile(String filename,String dest){
-        PacketChat packet;
-        packet=PacketChatFactory.createFileInitPacket((byte)0,getUser().getName(), filename, dest);
-        try{
-            client.putPacketChat(packet);
-        }catch(PacketChatException e){
-            Logger.w("Cannot send file init request");
-        }
-        
-    }
-
     private void sendFileTo(String args) throws PacketChatException{
         StringTokenizer tokens=new StringTokenizer(args," ");
         String filename;
@@ -181,7 +170,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
             dest=tokens.nextToken();
 
             if (checkFile(filename)){
-                sendFile(filename,dest);
+                new ClientChatFileOutput(client, filename, dest);
             }
         }
     }

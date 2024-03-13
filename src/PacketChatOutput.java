@@ -60,4 +60,8 @@ public class PacketChatOutput {
     public void sendFileInitFailure(byte nounce) throws PacketChatException{
         sendPacket(PacketChatFactory.createFileInitStatus(nounce,false));
     }
+
+    public void sendFileInitRequest(byte nounce,String sender,String filename,String dest) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileInitPacket(nounce, sender,filename, dest));
+    }
 }
