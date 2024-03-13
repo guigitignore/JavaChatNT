@@ -3,13 +3,18 @@ import java.io.InputStream;
 import java.net.Socket;
 
 public class ClientChat extends SocketWorker implements IPacketChatInterface,IUserConnection{
-    public final int BUCKET_CAPACITY=100;
+    public final static int BUCKET_CAPACITY=100;
+    public final static String CLIENT_NAME="[ClientChat]";
 
     private IPacketChatInterface packetInterface;
+    private IPacketChatInterface messageInterface;
 
-    private ClientChatMessage clientMessage=null;
-    private ClientChatFile clientFile=null;
     private PacketChatBucket bucket=null;
+
+    private PacketChatOutput clientInput;
+    private PacketChatOutput clientOutput;
+
+    private ClientChatRequest requestManager;
 
     public ClientChat(String host,int port) throws Exception{
         super(new Socket(host, port));
@@ -19,8 +24,36 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         return String.format("ClientChat -> ServerChat %s", getSocket().getRemoteSocketAddress().toString());
     }
 
-    public ClientChatFile getFile(){
-        return clientFile;
+    public IPacketChatInterface getMessageInterface(){
+        return messageInterface;
+    }
+
+    public PacketChat getPacketChat() throws PacketChatException {
+        return packetInterface.getPacketChat();
+    }
+
+    public void putPacketChat(PacketChat packet) throws PacketChatException {
+        packetInterface.putPacketChat(packet);
+    }
+
+    public User getUser() {
+        return null;
+    }
+
+    public PacketChatBucket getBucket(){
+        return bucket;
+    }
+
+    public PacketChatOutput getInput(){
+        return clientInput;
+    }
+
+    public PacketChatOutput getOutput(){
+        return clientOutput;
+    }
+
+    public ClientChatRequest getRequestManager(){
+        return requestManager;
     }
 
     private void skipWelcomeMessage() throws IOException{
@@ -41,14 +74,17 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         sendHelloPacket();
 
         packetInterface=new PacketChatRawInterface(getSocket().getInputStream(),getSocket().getOutputStream());
+        messageInterface=new PacketChatTelnetInterface(new InterruptibleInputStream(),System.out);
         bucket=new PacketChatBucket(BUCKET_CAPACITY);
-        clientMessage=new ClientChatMessage(this);
-        clientFile=new ClientChatFile(this);
+
+        clientInput=new PacketChatOutput(new ClientChatInput(this));
+        clientOutput=new PacketChatOutput(new ClientChatOutput(this));
+
+        requestManager=new ClientChatRequest(this);
     }
 
     private void mainloop() throws IOException{
         PacketChat packet;
-        byte command;
         PacketChatSanitizer sanitizer=new PacketChatSanitizer(this);
 
         while (true){
@@ -56,17 +92,12 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
                 packet=packetInterface.getPacketChat();
                 Logger.i("got packet: %s",packet.toString());
             }catch(PacketChatException e){
-                Logger.w("exit output loop: %s",e.getMessage());
+                Logger.w("exit input loop: %s",e.getMessage());
                 break;
             }
             try{
                 sanitizer.client(packet);
-                command=packet.getCommand();
-                if (command==PacketChat.SEND_MSG || command==PacketChat.AUTH || command==PacketChat.CHALLENGE){
-                    clientMessage.putPacketChat(packet);
-                }else{
-                    bucket.putPacketChat(packet);
-                }
+                bucket.putPacketChat(packet);
             }catch(PacketChatException e){
                 Logger.w("Packet dropped: %s",e.getMessage());
             }
@@ -89,20 +120,6 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         
     }
 
-    public PacketChat getPacketChat() throws PacketChatException {
-        return packetInterface.getPacketChat();
-    }
-
-    public void putPacketChat(PacketChat packet) throws PacketChatException {
-        packetInterface.putPacketChat(packet);
-    }
-
-    public User getUser() {
-        return clientMessage.getUser();
-    }
-
-    public PacketChatBucket getBucket(){
-        return bucket;
-    }
+    
     
 }

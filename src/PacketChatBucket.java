@@ -63,22 +63,23 @@ public class PacketChatBucket implements IPacketChatOutput{
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
-
-        if (!handleWaiters(getCommandEventId(packet.getCommand()), packet)){
-            if (!isAckPacket(packet) || !handleWaiters(getNounceEventId(packet.getParam()), packet)){
-                synchronized(stack){
-                    if (stack.size()==capacity){
-                        stack.removeLast();
-                    }
-                    stack.addFirst(packet);
-                }
+        if (isAckPacket(packet)){
+            if (handleWaiters(getNounceEventId(packet.getParam()), packet)) return;
+        }else{
+            if (handleWaiters(getCommandEventId(packet.getCommand()), packet)) return;
+        }
+        
+        synchronized(stack){
+            if (stack.size()==capacity){
+                stack.removeLast();
             }
+            stack.addFirst(packet);
         }
     }
 
     private PacketChat waitPacket(String...events) throws PacketChatException{
         ArrayDeque<AtomicReference<PacketChat>> locks;
-        AtomicReference<PacketChat> lock;
+        AtomicReference<PacketChat> lock,temp;
         PacketChat result;
 
         lock=new AtomicReference<>();
@@ -90,7 +91,13 @@ public class PacketChatBucket implements IPacketChatOutput{
             }
             synchronized(locks){
                 //clean consumed events
-                while (locks.peekLast().get()!=null) locks.removeLast();
+                if (locks.size()>0){
+                    while (true){
+                        temp=locks.peekLast();
+                        if (temp==null || temp.get()==null) break;
+                        locks.removeLast();
+                    }
+                }
                 locks.addFirst(lock);
             }
         }
@@ -113,7 +120,7 @@ public class PacketChatBucket implements IPacketChatOutput{
         if (result==null){
             String[] events=new String[commands.length];
             for (int i=0;i<commands.length;i++) events[i]=getCommandEventId(commands[i]);
-            waitPacket(events);
+            result=waitPacket(events);
         }
         
         return result;

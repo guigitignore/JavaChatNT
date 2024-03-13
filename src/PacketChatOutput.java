@@ -21,12 +21,8 @@ public class PacketChatOutput {
         sendPacket(PacketChatFactory.createMessagePacket(sender, message, dests));
     }
 
-    public void sendMessage(String message,String...dests) throws PacketChatException{
-        sendMessage(DEFAULT_SENDER,message,dests);
-    }
-
-    public void sendFormattedMessage(String format,Object...args) throws PacketChatException{
-        sendMessage(String.format(format, args));
+    public void sendFormattedMessage(String sender,String format,Object...args) throws PacketChatException{
+        sendMessage(sender,String.format(format, args));
     }
 
     public void sendChallenge(byte[] challenge) throws PacketChatException{

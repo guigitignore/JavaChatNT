@@ -13,6 +13,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
     private NounceManager outgoingFiles=new NounceManager();
 
     private final static int LINE_FEED=10;
+    public final static String SERVER_NAME="[SERVER]";
 
     public ServiceChat(Socket socket,ServerChat server) {
         super(socket,server);
