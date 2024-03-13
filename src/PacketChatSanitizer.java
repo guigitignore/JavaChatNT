@@ -74,8 +74,6 @@ public class PacketChatSanitizer {
     public void clientLogoutSanitize(PacketChat packet) throws PacketChatException{
         switch(packet.getCommand()){
             case PacketChat.AUTH:
-                packet.clearFields();
-                break;
             case PacketChat.CHALLENGE:
                 sanitizePacketArgsNumber(packet, 0,1);
                 break;

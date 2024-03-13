@@ -140,7 +140,7 @@ public class PacketChatBucket implements IPacketChatOutput{
             for (PacketChat elt:stack){
                 eltCommand=elt.getCommand();
                 for (byte command:commands){
-                    if (eltCommand==command){
+                    if (eltCommand==command && stack.remove(elt)){
                         result=elt;
                         break;
                     }
@@ -155,7 +155,7 @@ public class PacketChatBucket implements IPacketChatOutput{
 
         synchronized(stack){
             for (PacketChat elt:stack){
-                if (isAckPacket(elt) && elt.getParam()==nounce){
+                if (isAckPacket(elt) && elt.getParam()==nounce && stack.remove(elt)){
                     result=elt;
                     break;
                 }

@@ -3,22 +3,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientChatRequest {
-    private ClientChat client;
     private HashMap<Integer,AtomicBoolean> confirmations=new HashMap<>();
     private AtomicInteger confirmationCounter=new AtomicInteger(0);
+    private PacketChatOutput output;
 
     public ClientChatRequest(ClientChat client){
-        this.client=client;
-    }
-
-    private void sendMessageToClient(String format,Object...args){
-        PacketChat packet;
-        try{
-            packet=PacketChatFactory.createMessagePacket(ClientChat.CLIENT_NAME,String.format(format, args));
-            client.getMessageInterface().putPacketChat(packet);
-        }catch(PacketChatException e){
-            Logger.e("Cannot send message to client");
-        }
+        output=new PacketChatOutput(client.getMessageInterface());
     }
 
     public boolean sendConfirmationRequest(String message) throws InterruptedException{
@@ -34,7 +24,11 @@ public class ClientChatRequest {
         builder.append(String.format("\n\"/allow %d\" to accept",confirmationId));
         builder.append(String.format("\n\"/deny %d\" to reject\n",confirmationId));
 
-        sendMessageToClient(message);
+        try{
+            output.sendMessage(ClientChat.CLIENT_NAME, builder.toString());
+        }catch(PacketChatException e){
+            throw new InterruptedException("Cannot communicate with client");
+        }
         
         synchronized(request){
             request.wait();

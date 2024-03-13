@@ -26,7 +26,7 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
-        Logger.i("got packet in input %s",packet==null?"null":packet.toString());
+        
         if (!isConnected.get()){
             packet=handleLogoutPacket(packet);
         }
@@ -51,13 +51,16 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
 
             if (isConnected.get()){
                 packet=client.getBucket().waitPacketByType(PacketChat.SEND_MSG,PacketChat.FILE_INIT);
+                Logger.i("got packet in login input %s",packet==null?"null":packet.toString());
             }else{
                 packet=client.getBucket().waitPacketByType(PacketChat.AUTH,PacketChat.CHALLENGE);
+                Logger.i("got packet in logout input %s",packet==null?"null":packet.toString());
             }
             
             putPacketChat(packet);
         }catch(Exception e){
             e.printStackTrace();
+            throw e;
         }
         
     }
@@ -88,7 +91,10 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
                 }
                 break;
             case PacketChat.AUTH:
-                if (packet.getStatus()==PacketChat.STATUS_SUCCESS) isConnected.set(true);
+                if (packet.getStatus()==PacketChat.STATUS_SUCCESS){
+                    isConnected.set(true);
+                    client.getOutput().sendMessage("", "/listusers");
+                }
                 break;
         }
         return packet;

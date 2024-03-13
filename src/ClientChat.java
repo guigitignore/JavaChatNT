@@ -11,8 +11,11 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
     private PacketChatBucket bucket=null;
 
-    private PacketChatOutput clientInput;
-    private PacketChatOutput clientOutput;
+    private ClientChatInput clientInput;
+    private ClientChatOutput clientOutput;
+
+    private PacketChatOutput input;
+    private PacketChatOutput output;
 
     private ClientChatRequest requestManager;
 
@@ -37,7 +40,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     public User getUser() {
-        return null;
+        return clientInput.isConnected()?clientOutput.getUser():null;
     }
 
     public PacketChatBucket getBucket(){
@@ -45,11 +48,11 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     public PacketChatOutput getInput(){
-        return clientInput;
+        return input;
     }
 
     public PacketChatOutput getOutput(){
-        return clientOutput;
+        return output;
     }
 
     public ClientChatRequest getRequestManager(){
@@ -77,8 +80,11 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         messageInterface=new PacketChatTelnetInterface(new InterruptibleInputStream(),System.out);
         bucket=new PacketChatBucket(BUCKET_CAPACITY);
 
-        clientInput=new PacketChatOutput(new ClientChatInput(this));
-        clientOutput=new PacketChatOutput(new ClientChatOutput(this));
+        clientInput=new ClientChatInput(this);
+        clientOutput=new ClientChatOutput(this);
+
+        input=new PacketChatOutput(clientInput);
+        output=new PacketChatOutput(clientOutput);
 
         requestManager=new ClientChatRequest(this);
     }
