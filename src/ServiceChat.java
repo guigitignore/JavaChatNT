@@ -92,6 +92,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
 
     private void mainloop(){
         PacketChat packet;
+        PacketChatSanitizer sanitizer=new PacketChatSanitizer(this);
 
         while (true){
             try{
@@ -100,6 +101,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
                 break;
             }
             try{
+                sanitizer.server(packet);
                 inputServiceChat.putPacketChat(packet);
             }catch(PacketChatException e){
                 if (getUser()==null){

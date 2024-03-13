@@ -3,11 +3,13 @@ import java.io.InputStream;
 import java.net.Socket;
 
 public class ClientChat extends SocketWorker implements IPacketChatInterface,IUserConnection{
+    public final int BUCKET_CAPACITY=100;
 
     private IPacketChatInterface packetInterface;
 
     private ClientChatMessage clientMessage=null;
     private ClientChatFile clientFile=null;
+    private PacketChatBucket bucket=null;
 
     public ClientChat(String host,int port) throws Exception{
         super(new Socket(host, port));
@@ -39,6 +41,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         sendHelloPacket();
 
         packetInterface=new PacketChatRawInterface(getSocket().getInputStream(),getSocket().getOutputStream());
+        bucket=new PacketChatBucket(BUCKET_CAPACITY);
         clientMessage=new ClientChatMessage(this);
         clientFile=new ClientChatFile(this);
     }
@@ -59,10 +62,10 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
             try{
                 sanitizer.client(packet);
                 command=packet.getCommand();
-                if (command==PacketChat.FILE_INIT || command==PacketChat.FILE_DATA || command==PacketChat.FILE_OVER){
-                    clientFile.putPacketChat(packet);
-                }else{
+                if (command==PacketChat.SEND_MSG || command==PacketChat.AUTH || command==PacketChat.CHALLENGE){
                     clientMessage.putPacketChat(packet);
+                }else{
+                    bucket.putPacketChat(packet);
                 }
             }catch(PacketChatException e){
                 Logger.w("Packet dropped: %s",e.getMessage());
@@ -96,6 +99,10 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
     public User getUser() {
         return clientMessage.getUser();
+    }
+
+    public PacketChatBucket getBucket(){
+        return bucket;
     }
     
 }

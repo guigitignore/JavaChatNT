@@ -1,5 +1,8 @@
 import java.io.File;
+import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.crypto.Cipher;
 
@@ -9,6 +12,8 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
     private RSAKeyPair userKeyPair=null;
     private User user=null;
     private boolean connected=false;
+    private HashMap<Integer,AtomicBoolean> confirmations=new HashMap<>();
+    private AtomicInteger confirmationCounter=new AtomicInteger(0);
 
     public ClientChat client;
     PacketChatTelnetInterface messageInterface;
@@ -23,7 +28,9 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
         packet=handleIncomingPacket(packet);
-        if (packet!=null) messageInterface.putPacketChat(packet);
+        if (packet!=null){
+            messageInterface.putPacketChat(packet);
+        }
     }
 
     public void setup() throws Exception {
@@ -87,7 +94,7 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
         return result;
     }
 
-    public void sendFile(String filename,String dest){
+    private void sendFile(String filename,String dest){
         PacketChat packet;
         packet=PacketChatFactory.createFileInitPacket((byte)0,getUser().getName(), filename, dest);
         try{
@@ -98,7 +105,7 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
         
     }
 
-    public void sendFileTo(String args){
+    private void sendFileTo(String args){
         StringTokenizer tokens=new StringTokenizer(args," ");
         String filename;
         String dest;
@@ -115,7 +122,50 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
         }
     }
 
-    public void sendFileToAll(String filename){
+    public boolean sendConfirmationRequest(String message) throws InterruptedException{
+        int confirmationId=confirmationCounter.incrementAndGet();
+        AtomicBoolean request=new AtomicBoolean(false);
+
+        synchronized(confirmations){
+            confirmations.put(confirmationId,request);
+        }
+        
+        StringBuilder builder=new StringBuilder();
+        builder.append(message);
+        builder.append(String.format("\n\"/allow %d\" to accept",confirmationId));
+        builder.append(String.format("\n\"/deny %d\" to reject\n",confirmationId));
+
+        sendMessageToClient(builder.toString());
+        
+        synchronized(request){
+            request.wait();
+        }
+        return request.get();
+    }
+
+    private void sendConfirmationResponse(String arg,boolean res){
+        AtomicBoolean request;
+        int confirmationId;
+
+        try{
+            confirmationId=Integer.parseInt(arg);
+            synchronized(confirmations){
+                request=confirmations.remove(confirmationId);
+            }
+            if (request==null){
+                sendMessageToClient("This request number does not exist");
+            }else{
+                request.set(res);
+                synchronized(request){
+                    request.notify();
+                }
+            }
+        }catch(NumberFormatException e){
+            sendMessageToClient("Invalid request number");
+        }
+    }
+
+    private void sendFileToAll(String filename){
         if (checkFile(filename)){
             /* 
             for (String username:ServerChatManager.getInstance().getUsers()){
@@ -128,7 +178,7 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
         }
     }
 
-    public PacketChat handleOutgoingMessagePacket(PacketChat packet){
+    private PacketChat handleOutgoingMessagePacket(PacketChat packet){
         String message=new String(packet.getField(1));
         StringBuilder builder;
         StringTokenizer tokens;
@@ -152,12 +202,22 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
                     sendFileToAll(args);
                     packet=null;
                     break;
+                case "allow":
+                    sendConfirmationResponse(args,true);
+                    packet=null;
+                    break;
+                case "deny":
+                    sendConfirmationResponse(args,false);
+                    packet=null;
+                    break;
 
                 case "help":
                     builder=new StringBuilder();
                     builder.append("list of heavy client commands:\n");
                     builder.append("/sendFileTo - send message to a client\n");
                     builder.append("/sendFileToAll - send message to all\n");
+                    builder.append("/allow - accept a request\n");
+                    builder.append("/deny - reject a request\n");
                     builder.append("/help - print help menu\n");
 
                     sendMessageToClient(builder.toString());
@@ -168,7 +228,7 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
         return packet;
     }
     
-    public PacketChat handleOutgoingPacket(PacketChat packet){
+    private PacketChat handleOutgoingPacket(PacketChat packet) throws PacketChatException{
         switch (packet.getCommand()){
             case PacketChat.AUTH:
                 handleOutgoingAuthPacket(packet);
@@ -182,19 +242,39 @@ public class ClientChatMessage extends LoopWorker implements IPacketChatOutput,I
         return packet;
     }
 
-    public PacketChat handleIncomingPacket(PacketChat packet){
+    private void listUsers() throws PacketChatException{
+        PacketChat packet;
+        StringBuilder builder;
+
+        client.putPacketChat(PacketChatFactory.createListUserPacket());
+        packet=client.getBucket().waitPacketByType(PacketChat.LIST_USERS);
+
+        builder=new StringBuilder();
+        builder.append("List of connected users:\n");
+        for (byte[] field:packet.getFields()){
+            builder.append(String.format("- %s \n",new String(field)));
+        }
+        sendMessageToClient(builder.toString());
+    }
+
+    private PacketChat handleIncomingPacket(PacketChat packet) throws PacketChatException{
+        byte[] result=null;
+
         switch(packet.getCommand()){
             case PacketChat.CHALLENGE:
                 if (packet.getFieldsNumber()>=1 && userKeyPair!=null){
                     try{
                         Cipher cipher=Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
                         cipher.init(Cipher.DECRYPT_MODE, userKeyPair.getPrivate());
-                        client.putPacketChat(PacketChatFactory.createChallengePacket(cipher.doFinal(packet.getField(0))));
+                        result=cipher.doFinal(packet.getField(0));
                     }catch(Exception e){
                         Logger.w("cannot solve challenge: %s",e.getMessage());
                     }
-                    //drop packet
-                    packet=null;
+                    if (result!=null){
+                        client.putPacketChat(PacketChatFactory.createChallengePacket(result));
+                        //drop packet
+                        packet=null;
+                    }
                 }
                 break;
             case PacketChat.AUTH:

@@ -7,11 +7,10 @@ public class ServiceChatInput implements IPacketChatOutput{
     private User user=null;
     private String loginUsername=null;
     private IChallenge challenge=null;
-    private PacketChatSanitizer sanitizer;
+    
 
     public ServiceChatInput(ServiceChat client){
         this.client=client;
-        sanitizer=new PacketChatSanitizer(client);
     }
 
     public User getUser(){
@@ -195,7 +194,6 @@ public class ServiceChatInput implements IPacketChatOutput{
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
         Logger.i("got packet: %s",packet);
-        sanitizer.server(packet);
 
         switch(packet.getCommand()){
             case PacketChat.AUTH:

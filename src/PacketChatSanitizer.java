@@ -93,16 +93,16 @@ public class PacketChatSanitizer {
                 sanitizePacketVAArgs(packet, 1);
                 break;
             case PacketChat.FILE_INIT:
-                sanitizePacketArgsNumber(packet, 3);
+                sanitizePacketArgsNumber(packet, 0,3);
                 break;
             case PacketChat.FILE_DATA:
-                sanitizePacketArgsNumber(packet, 3);
+                sanitizePacketArgsNumber(packet, 0,3);
                 break;
             case PacketChat.FILE_ACK:
                 packet.clearFields();
                 break;
             case PacketChat.FILE_OVER:
-                sanitizePacketArgsNumber(packet, 2);
+                sanitizePacketArgsNumber(packet, 0,2);
                 break;
             default:
                 throw new PacketChatException("Unauthorized packet type");
