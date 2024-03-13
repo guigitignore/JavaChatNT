@@ -38,7 +38,7 @@ public class ClientChatFileInput extends LoopWorker {
     }
 
     public void loop() throws Exception {
-        
+        Thread.sleep(10);
     }
 
 

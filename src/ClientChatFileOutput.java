@@ -24,11 +24,17 @@ public class ClientChatFileOutput extends LoopWorker{
     }
 
     public void init() throws Exception {
-        server.sendFileInitRequest((byte)0, client.getUser().getName(), filename, dest);
+        nounce=(byte)0;
+        server.sendFileInitRequest(nounce, client.getUser().getName(), filename, dest);
+        PacketChat res=client.getBucket().waitPacketAckByNounce(nounce);
+
+        if (res.getStatus()==PacketChat.STATUS_ERROR){
+            output.sendFormattedMessage(ClientChat.CLIENT_NAME, "%s reject file %s",dest,filename);
+        }
     }
 
     public void loop() throws Exception {
-        
+        Thread.sleep(10);
     }
 
 
