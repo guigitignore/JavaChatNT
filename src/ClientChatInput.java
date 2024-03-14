@@ -70,12 +70,23 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
         WorkerManager.getInstance().cancelAll();
     }
 
+
     private PacketChat handleLoginPacket(PacketChat packet) throws PacketChatException{
 
         switch(packet.getCommand()){
             case PacketChat.FILE_INIT:
                 if (packet.getFieldsNumber()==3) new ClientChatFileInput(client, packet);
                 packet=null;
+                break;
+            case PacketChat.SEND_MSG:
+                if (packet.getFlag()==PacketChat.ENCRYPTION_FLAG){
+                    try{
+                        packet.replaceField(1,DESEncoder.getInstance().decode(packet.getField(1)));       
+                    }catch(Exception e){
+                        Logger.w("Cannot decrypt message data: %s",e.getMessage());
+                        packet=null;
+                    }
+                }
                 break;
         }
 

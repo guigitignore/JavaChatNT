@@ -65,7 +65,7 @@ public class ServiceChatInput implements IPacketChatOutput{
 
     private void handleMessagePacket(PacketChat packet) throws PacketChatException{
         String senderName=new String(packet.getField(0));
-        String message=new String(packet.getField(1));
+        String message;
 
         switch (client.getUser().getTag()){
             case User.ADMIN_TAG:
@@ -80,7 +80,7 @@ public class ServiceChatInput implements IPacketChatOutput{
         }
         packet.replaceField(0, senderName.getBytes());
 
-        if (message.startsWith("/")){
+        if (packet.getFlag()!=PacketChat.ENCRYPTION_FLAG && (message=new String(packet.getField(1))).startsWith("/")){
             StringTokenizer tokens=new StringTokenizer(message," ");
             String command=tokens.nextToken().substring(1).toLowerCase();
             String args=tokens.hasMoreTokens()?tokens.nextToken("").strip():"";

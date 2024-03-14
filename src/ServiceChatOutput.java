@@ -16,44 +16,62 @@ public class ServiceChatOutput  extends LoopWorker implements IPacketChatOutput{
         queue.putPacketChat(packet);
     }
 
-    private void handleFileInitPacket(PacketChat packet) throws PacketChatException{
+    private PacketChat handleFileInitPacket(PacketChat packet){
         String sender;
         byte nounce=packet.getParam();
 
         if (packet.getFieldsNumber()>0){
             sender=new String(packet.getField(0));
             if (!client.getIncomingFiles().registerNounce(nounce,sender)){
-                throw new PacketChatException("nounce cannot be registered");
+                Logger.w("nounce %d cannot be registered",nounce);
+                packet=null;
             }
         }else{
             if (!client.getOutgoingFiles().allowNounce(nounce)){
-                throw new PacketChatException("nounce cannot be allowed");
+                Logger.w("nounce %d cannot be allowed",nounce);
+                packet=null;
             }
         }
+        return packet;
     }
 
-    private void handleFileOverPacket(PacketChat packet) throws PacketChatException{
+    private PacketChat handleFileOverPacket(PacketChat packet){
         byte nounce=packet.getParam();
 
         if (packet.getFieldsNumber()==0){
             client.getOutgoingFiles().removeNounce(nounce);
         }
+
+        return packet;
     }
 
+    private PacketChat handleMessagePacket(PacketChat packet){
+        if (packet.getFlag()==PacketChat.ENCRYPTION_FLAG && client.getClientType()!=ClientType.PACKETCHAT_CLIENT){
+            packet=null;
+        }
+        return packet;
+    }
     
     private void handlePacket(PacketChat packet) throws PacketChatException{
         switch (packet.getCommand()){
             case PacketChat.FILE_INIT:
-                handleFileInitPacket(packet);
+                packet=handleFileInitPacket(packet);
                 break;
             case PacketChat.FILE_OVER:
-                handleFileOverPacket(packet);
+                packet=handleFileOverPacket(packet);
+                break;
+            case PacketChat.SEND_MSG:
+                packet=handleMessagePacket(packet);
                 break;
         }
 
-        Logger.i("send packet: %s",packet);
         //send packet 
-        client.putPacketChat(packet);
+        if (packet==null){
+            Logger.i("drop packet in output");
+        }else{
+            Logger.i("send packet: %s",packet);
+            client.putPacketChat(packet);
+        }
     }
 
     public void setup() throws Exception {

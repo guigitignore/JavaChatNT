@@ -18,6 +18,7 @@ public class PacketChat {
 
     public final static byte STATUS_SUCCESS=      (byte)0x00;
     public final static byte STATUS_ERROR=        (byte)0x01;
+    public final static byte ENCRYPTION_FLAG=     (byte)0x01;
 
 
     private final static int HEADER_SIZE=8;

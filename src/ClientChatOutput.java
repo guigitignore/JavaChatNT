@@ -5,6 +5,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
     private ClientChat client;
     private User user=null;
     private PacketChatOutput output;
+    private boolean encryption=false;
 
     public ClientChatOutput(ClientChat client){
         super(client);
@@ -107,9 +108,22 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
                     listConnectedUsers();
                     packet=null;
                     break;
+                case "encryption":
+                    setEncryptionMode(args);
+                    packet=null;
+                    break;
                 case "help":
                     helpCommand();
                     break;
+            }
+        }else{
+            if (encryption){
+                try{
+                    packet.replaceField(1,DESEncoder.getInstance().encode(packet.getField(1)));
+                    packet.setFlag(PacketChat.ENCRYPTION_FLAG);
+                }catch(Exception e){
+                    Logger.w("Cannot encrypt message data: %s",e.getMessage());
+                }
             }
         }
         return packet;
@@ -124,6 +138,21 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         String[] result=new String[fields.length];
         for (int i=0;i<fields.length;i++) result[i]=new String(fields[i]);
         return result;
+    }
+
+    private void setEncryptionMode(String arg) throws PacketChatException{
+        switch(arg.strip().toLowerCase()){
+            case "on":
+                encryption=true;
+                output.sendMessage("activate encryption");
+                break;
+            case "off":
+                encryption=false;
+                output.sendMessage("deactivate encryption");
+                break;
+            default:
+                output.sendMessage("Expected on/off as argument");
+        }
     }
 
     private void listConnectedUsers() throws PacketChatException{
