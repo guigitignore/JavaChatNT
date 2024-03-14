@@ -14,7 +14,9 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
     }
 
     public boolean isConnected(){
-        return isConnected.get();
+        synchronized(isConnected){
+            return isConnected.get();
+        }
     }
 
     public String getDescription() {
@@ -98,7 +100,9 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
                 break;
             case PacketChat.AUTH:
                 if (packet.getStatus()==PacketChat.STATUS_SUCCESS){
-                    isConnected.set(true);
+                    synchronized(isConnected){
+                        isConnected.set(true);
+                    }
                     client.getOutput().putPacketChat(PacketChatFactory.createMessagePacket("","/listusers"));
                 }
                 break;

@@ -25,7 +25,7 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
         output.print(USERNAME_PROMPT);
     }
 
-    public void putPacketChat(PacketChat packet) throws PacketChatException {
+    public synchronized void putPacketChat(PacketChat packet) throws PacketChatException {
         switch (packet.getCommand()){
             case PacketChat.AUTH:
                 if (packet.getStatus()==PacketChat.STATUS_SUCCESS){

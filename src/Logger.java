@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -5,12 +8,13 @@ import java.util.HashSet;
 
 public class Logger {
     private final static SimpleDateFormat DATE_FORMAT=new SimpleDateFormat("dd/MM/yy - HH:mm:ss");
+    private final static SimpleDateFormat LOG_FORMAT=new SimpleDateFormat("dd-MM-yy_HH-mm-ss");
     private static HashSet<PrintStream> outputs;
 
     static{
         outputs=new HashSet<>();
         //add stdout by default
-        outputs.add(System.out);
+        outputs.add(System.out);    
     }
 
     private static String getCallerName(){
@@ -49,6 +53,20 @@ public class Logger {
 
     public static void addOutput(PrintStream output){
         outputs.add(output);
+    }
+
+    public static boolean addOutput(String name){
+        boolean result;
+
+        File file = new File(String.format("logs/%s_%s.log",name,LOG_FORMAT.format(new Date())));
+        try{
+            file.getParentFile().mkdirs(); 
+            addOutput(new PrintStream(new FileOutputStream(file,false)));
+            result=true;
+        }catch(IOException e){
+            result=false;
+        }
+        return result;
     }
 
     public static void removeOutput(PrintStream output){

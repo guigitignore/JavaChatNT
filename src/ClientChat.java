@@ -119,7 +119,6 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     public void run(){
-        Logger.removeSTDOUT();
 
         try{
             initStreams();

@@ -1,5 +1,7 @@
 build
 out
+logs
+downloads
 **/*.txt
 **/*.pub
 **/*.priv

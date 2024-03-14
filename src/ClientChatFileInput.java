@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -34,11 +35,14 @@ public class ClientChatFileInput extends LoopWorker {
     }
 
     public void init() throws Exception {
-        if (!client.getIncomingFiles().isNounceDefined(nounce)
+        if (!filename.contains("/") && !filename.contains("..")
+        && !client.getIncomingFiles().isNounceDefined(nounce)
         && sendClientRequest()
         && client.getIncomingFiles().registerNounce(nounce,sender)){
             try{
-                fileOutputStream=new FileOutputStream(String.format("$%s",filename));
+                File file=new File("downloads/"+filename);
+                file.getParentFile().mkdirs(); 
+                fileOutputStream=new FileOutputStream(filename);
                 server.sendFileInitSucess(nounce);
             }catch(IOException e){
                 server.sendFileInitFailure(nounce);

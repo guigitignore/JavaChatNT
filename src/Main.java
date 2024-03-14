@@ -1,14 +1,9 @@
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.security.Security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 class Main{
     public final static int DEFAULT_SERVER_PORT=2000;
-    public final static String CLIENT_LOGFILE="client.log";
-    public final static String SERVER_LOGFILE="server.log";
     public static void main(String[] args) {
         if (args.length<1){
             System.err.println("You must specify the mode in argument: server,connect,generate");
@@ -49,11 +44,8 @@ class Main{
     }
 
     public static void server(String... args){
-        try{
-            Logger.addOutput(new PrintStream(new FileOutputStream(SERVER_LOGFILE, true)));
-        }catch(IOException e){
-            Logger.e("Cannot write logs to \"%s\"",SERVER_LOGFILE);
-        }
+        
+        if (!Logger.addOutput("server")) Logger.e("Cannot write server logs in file");
         Logger.i("Starting engine...");
         new ServerChat(DEFAULT_SERVER_PORT,User.USER_TAG);
         new ServerChat(DEFAULT_SERVER_PORT+1,User.ADMIN_TAG);
@@ -92,12 +84,12 @@ class Main{
             }
             if (port<=0) throw new NumberFormatException("port must be greater than 0");
 
-            try{
-                Logger.addOutput(new PrintStream(new FileOutputStream(CLIENT_LOGFILE, true)));
-            }catch(IOException e){
-                Logger.e("Cannot open log file \"%s\": falling back on standard output",CLIENT_LOGFILE);
+            if (Logger.addOutput("client")){
+                Logger.removeSTDOUT();
+            }else{
+                Logger.e("Cannot write client logs in file: falling back on standard output");
             }
-
+                
             try{
                 new ClientChat(host, port);
             }catch(Exception e){
