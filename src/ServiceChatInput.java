@@ -214,6 +214,9 @@ public class ServiceChatInput implements IPacketChatOutput{
             case PacketChat.FILE_DATA:
                 handleFileDataPacket(packet);
                 break;
+            case PacketChat.FILE_ACK:
+                handleFileAckPacket(packet);
+                break;
             case PacketChat.FILE_OVER:
                 handleFileOverPacket(packet);
                 break;

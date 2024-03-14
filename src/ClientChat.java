@@ -16,6 +16,9 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
     private ClientChatRequest requestManager;
 
+    private NounceManager incomingFiles;
+    private NounceManager outgoingFiles;
+
     public ClientChat(String host,int port) throws Exception{
         super(new Socket(host, port));
     }
@@ -56,6 +59,14 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         return requestManager;
     }
 
+    public NounceManager getIncomingFiles(){
+        return incomingFiles;
+    }
+
+    public NounceManager getOutgoingFiles(){
+        return outgoingFiles;
+    }
+
     private void skipWelcomeMessage() throws IOException{
         InputStream inputStream=getSocket().getInputStream();
         inputStream.skip(inputStream.available());
@@ -76,6 +87,8 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         packetInterface=new PacketChatRawInterface(getSocket().getInputStream(),getSocket().getOutputStream());
         messageInterface=new PacketChatTelnetInterface(new InterruptibleInputStream(),System.out);
         bucket=new PacketChatBucket(BUCKET_CAPACITY);
+        incomingFiles=new NounceManager();
+        outgoingFiles=new NounceManager();
 
         clientInput=new ClientChatInput(this);
         clientOutput=new ClientChatOutput(this);

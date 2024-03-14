@@ -27,32 +27,20 @@ public abstract class LoopWorker extends Thread implements IWorker{
 
     public abstract void loop() throws Exception;
 
-    public abstract void end() throws Exception;
-
     public abstract void cleanup() throws Exception;
 
     public final void run(){
-        boolean initSuccess;
-
         try{
             init();
-            initSuccess=true;
-        }catch(Exception e){
-            initSuccess=false;
-        }
-
-        if (initSuccess){
+            
             while(true){
                 try{
                     loop();
-                }catch(Exception e){
+                }catch(Exception e2){
                     break;
                 }
             }
-            try{
-                end();
-            }catch(Exception e){}
-        }
+        }catch(Exception e){}
 
         try{
             cleanup();

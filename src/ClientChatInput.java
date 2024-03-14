@@ -60,8 +60,6 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
         
     }
 
-    public void end() throws Exception {}
-
     public void cleanup() throws Exception {
         WorkerManager.getInstance().cancelAll();
     }

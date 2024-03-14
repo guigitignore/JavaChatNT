@@ -30,7 +30,7 @@ public class PacketChatOutput {
     }
 
     public void sendFormattedMessage(String format,Object...args) throws PacketChatException{
-        sendMessage(sender,String.format(format, args));
+        sendMessage(String.format(format, args));
     }
 
     public void sendChallenge(byte[] challenge) throws PacketChatException{
@@ -62,14 +62,38 @@ public class PacketChatOutput {
     }
 
     public void sendFileInitSucess(byte nounce) throws PacketChatException{
-        sendPacket(PacketChatFactory.createFileInitStatus(nounce,true));
+        sendPacket(PacketChatFactory.createFileInitStatusPacket(nounce,true));
     }
 
     public void sendFileInitFailure(byte nounce) throws PacketChatException{
-        sendPacket(PacketChatFactory.createFileInitStatus(nounce,false));
+        sendPacket(PacketChatFactory.createFileInitStatusPacket(nounce,false));
     }
 
     public void sendFileInitRequest(byte nounce,String filename,String dest) throws PacketChatException{
         sendPacket(PacketChatFactory.createFileInitPacket(nounce, sender,filename, dest));
+    }
+
+    public void sendFileDataRequest(byte nounce,byte[] data,String dest) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileDataPacket(nounce, sender,data, dest));
+    }
+
+    public void sendFileDataSuccess(byte nounce) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileAckStatusPacket(nounce, true));
+    }
+
+    public void sendFileDataFailure(byte nounce) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileAckStatusPacket(nounce, false));
+    }
+
+    public void sendFileOverRequest(byte nounce,String dest) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileOverPacket(nounce,sender,dest));
+    }
+
+    public void sendFileOverSuccess(byte nounce) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileOverStatusPacket(nounce,true));
+    }
+
+    public void sendFileOverFailure(byte nounce) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileOverStatusPacket(nounce,false));
     }
 }

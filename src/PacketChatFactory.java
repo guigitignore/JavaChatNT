@@ -78,12 +78,44 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createFileInitStatus(byte nounce,boolean status){
+    public static PacketChat createFileDataPacket(byte nounce,String sender,byte[] data,String dest){
         PacketChat packet=new PacketChat();
 
-        packet.setCommand(PacketChat.FILE_INIT);
+        packet.setCommand(PacketChat.FILE_DATA);
+        packet.addField(sender.getBytes());
+        packet.addField(data);
+        packet.addField(dest.getBytes());
+        return packet;
+    }
+
+    public static PacketChat createFileOverPacket(byte nounce,String sender,String dest){
+        PacketChat packet=new PacketChat();
+
+        packet.setCommand(PacketChat.FILE_OVER);
+        packet.addField(sender.getBytes());
+        packet.addField(dest.getBytes());
+        return packet;
+    }
+
+    private static PacketChat createFileStatusPacket(byte command,byte nounce,boolean status){
+        PacketChat packet=new PacketChat();
+        packet.setCommand(command);
         if (status) packet.setStatus(PacketChat.STATUS_SUCCESS);
         else packet.setStatus(PacketChat.STATUS_ERROR);
         return packet;
     }
+
+    public static PacketChat createFileInitStatusPacket(byte nounce,boolean status){
+        return createFileStatusPacket(PacketChat.FILE_INIT, nounce, status);
+    }
+
+    public static PacketChat createFileOverStatusPacket(byte nounce,boolean status){
+        return createFileStatusPacket(PacketChat.FILE_OVER, nounce, status);
+    }
+
+    public static PacketChat createFileAckStatusPacket(byte nounce,boolean status){
+        return createFileStatusPacket(PacketChat.FILE_ACK ,nounce, status);
+    }
+
+
 }
