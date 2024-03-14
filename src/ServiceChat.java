@@ -20,11 +20,11 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
     }
 
     public PacketChatOutput getInput(){
-        return new PacketChatOutput(inputServiceChat);
+        return new PacketChatOutput(inputServiceChat,SERVER_NAME);
     }
 
     public PacketChatOutput getOutput(){
-        return new PacketChatOutput(outputServiceChat);
+        return new PacketChatOutput(outputServiceChat,SERVER_NAME);
     }
 
     public User getUser(){

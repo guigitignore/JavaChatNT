@@ -3,7 +3,7 @@ public class UserCommand {
         StringBuilder builder;
         switch (command){
             case "hello":
-                user.getOutput().sendMessage(ServiceChat.SERVER_NAME,"hello from server");
+                user.getOutput().sendMessage("hello from server");
                 break;
             case "listusers":
                 builder=new StringBuilder();
@@ -11,7 +11,7 @@ public class UserCommand {
                 for (ServiceChat client:ServerChatManager.getInstance().getClients()){
                     builder.append(String.format("- %s - %s \n",client.getUser().getName(),client.getClientType().name()));
                 }
-                user.getOutput().sendMessage(ServiceChat.SERVER_NAME,builder.toString());
+                user.getOutput().sendMessage(builder.toString());
                 break;
             case "help":
                 builder=new StringBuilder();
@@ -19,7 +19,7 @@ public class UserCommand {
                 builder.append("/hello - send hello message\n");
                 builder.append("/listusers - list connected users\n");
                 builder.append("/help - print help menu\n");
-                user.getOutput().sendMessage(ServiceChat.SERVER_NAME,builder.toString());
+                user.getOutput().sendMessage(builder.toString());
                 break;
             default:
                 user.getOutput().sendFormattedMessage("The command \"%s\" does not exist",command);

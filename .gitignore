@@ -1,6 +1,6 @@
 build
 out
-users.txt
+**/*.txt
 **/*.pub
 **/*.priv
 **/*.log

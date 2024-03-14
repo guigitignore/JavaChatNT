@@ -50,7 +50,7 @@ public class ServiceChatInput implements IPacketChatOutput{
                     //send list of connected users
                     if (client.getClientType()==ClientType.TELNET_CLIENT){
                         //send server command
-                        client.getInput().sendMessage(ServiceChat.SERVER_NAME, "/listusers");
+                        client.getInput().sendMessage( "/listusers");
                     }
                 }else{
                     client.getOutput().sendAuthFailure("Unauthorized connection");
@@ -93,7 +93,7 @@ public class ServiceChatInput implements IPacketChatOutput{
                     new UserCommand(client, command, args);
                     break;
                 default:
-                    client.getOutput().sendMessage(ServiceChat.SERVER_NAME,"You are not allowed to execute server commands");
+                    client.getOutput().sendMessage("You are not allowed to execute server commands");
                     break;
             }
 

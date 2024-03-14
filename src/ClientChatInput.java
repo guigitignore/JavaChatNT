@@ -60,7 +60,9 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
         
     }
 
-    public void end() throws Exception {
+    public void end() throws Exception {}
+
+    public void cleanup() throws Exception {
         WorkerManager.getInstance().cancelAll();
     }
 
@@ -99,7 +101,7 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
             case PacketChat.AUTH:
                 if (packet.getStatus()==PacketChat.STATUS_SUCCESS){
                     isConnected.set(true);
-                    client.getOutput().sendMessage("", "/listusers");
+                    client.getOutput().putPacketChat(PacketChatFactory.createMessagePacket("","/listusers"));
                 }
                 break;
         }

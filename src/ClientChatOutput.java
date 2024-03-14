@@ -23,13 +23,11 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
 
     public void setup() throws Exception {
         client=(ClientChat)getArgs()[0];
-        output=new PacketChatOutput(client.getMessageInterface());
+        output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
     }
 
     
-    public void init() throws Exception {
-        output=new PacketChatOutput(client.getMessageInterface());
-    }
+    public void init() throws Exception {}
 
     public void loop() throws Exception {
         try{
@@ -42,7 +40,9 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         }
     }
 
-    public void end() throws Exception {
+    public void end() throws Exception {}
+
+    public void cleanup() throws Exception {
         WorkerManager.getInstance().cancelAll();
     }
 
@@ -73,7 +73,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
             user=new RSAUser(username, RSAEncoder.getInstance().encode(userKeyPair.getPublic()));
             packet.addField(user.getKey());
             //set private key
-            ((ClientChatInput)client.getInput().getInterface()).setPrivateKey(userKeyPair.getPrivate());
+            client.getInput().setPrivateKey(userKeyPair.getPrivate());
         }catch(Exception e){
             Logger.w("cannot load user RSA key: %s. Falling back on password authentification",e.getMessage());
             user=new PasswordUser(username,"");
@@ -141,7 +141,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         for (String username:connectedUsers){
             builder.append(String.format("- %s \n",username));
         }
-        output.sendMessage(ClientChat.CLIENT_NAME,builder.toString());
+        output.sendMessage(builder.toString());
     }
 
     private void helpCommand() throws PacketChatException{
@@ -155,7 +155,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         builder.append("/deny - reject a request\n");
         builder.append("/help - print help menu\n");
 
-        output.sendMessage(ClientChat.CLIENT_NAME,builder.toString());
+        output.sendMessage(builder.toString());
     }
 
     private void sendFileTo(String args) throws PacketChatException{
@@ -164,7 +164,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         String dest;
 
         if (tokens.countTokens()<2){
-            output.sendMessage(ClientChat.CLIENT_NAME,"this command expects 2 arguments");
+            output.sendMessage("this command expects 2 arguments");
         }else{
             filename=tokens.nextToken();
             dest=tokens.nextToken();
@@ -181,12 +181,12 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         File file=new File(filename);
         if (file.exists()){
             if (!file.isFile()){
-                output.sendMessage(ClientChat.CLIENT_NAME,"File \"%s\" is not a file", filename);
+                output.sendFormattedMessage("File \"%s\" is not a file", filename);
             }else{
                 result=true;
             }
         }else{
-            output.sendMessage(ClientChat.CLIENT_NAME,"File \"%s\" does not exists", filename);
+            output.sendFormattedMessage("File \"%s\" does not exists", filename);
         }
         return result;
     }
@@ -197,10 +197,10 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         try{
             confirmationId=Integer.parseInt(arg);
             if (client.getRequestManager().sendConfirmationResponse(confirmationId, res)==false){
-                output.sendMessage(ClientChat.CLIENT_NAME,"This request number does not exist");
+                output.sendMessage("This request number does not exist");
             }
         }catch(NumberFormatException e){
-            output.sendMessage(ClientChat.CLIENT_NAME,"Invalid request number");
+            output.sendMessage("Invalid request number");
         }
     }
 

@@ -12,7 +12,7 @@ public class AdminCommand {
             builder.append(String.format("%d - %s - %b\n", i,worker.getDescription(),worker.getStatus()));
             i++;
         }
-        client.getOutput().sendMessage(ServiceChat.SERVER_NAME,builder.toString());
+        client.getOutput().sendMessage(builder.toString());
     }
 
     private void killCommand(String args) throws PacketChatException{
@@ -26,12 +26,12 @@ public class AdminCommand {
         String message=String.format("\"%s\" shutdown the server...",client.getUser().getName());
         
         Logger.w(message);
-        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).getOutput().sendMessage(ServiceChat.SERVER_NAME,message);
+        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).getOutput().sendMessage(message);
         WorkerManager.getInstance().cancelAll();
     }
 
     private void wallCommand(String args) throws PacketChatException{
-        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).getOutput().sendFormattedMessage(ServiceChat.SERVER_NAME,args);
+        ServerChatManager.getInstance().getClientsByTag(User.ADMIN_TAG).getOutput().sendFormattedMessage(args);
     }
 
     private void kickCommand(String args) throws PacketChatException{
@@ -50,13 +50,13 @@ public class AdminCommand {
         ServerChatManager.getInstance().getClients().stream().map(ServiceChat::getUser).forEach(user->{
             builder.append(String.format("- %s / %s / %s\n",user.getName(),user.getTypeName(),user.getTag()));
         });
-        client.getOutput().sendMessage(ServiceChat.SERVER_NAME,builder.toString());
+        client.getOutput().sendMessage(builder.toString());
     }
 
     private void addpwduserCommand(String args) throws PacketChatException{
         StringTokenizer tokens=new StringTokenizer(args," ");
         if (tokens.countTokens()!=2){
-            client.getOutput().sendMessage(ServiceChat.SERVER_NAME,"Expected 2 arguments");
+            client.getOutput().sendMessage("Expected 2 arguments");
         }else{
             String username=tokens.nextToken();
             String password=tokens.nextToken();
@@ -73,7 +73,7 @@ public class AdminCommand {
         User user;
         StringTokenizer tokens=new StringTokenizer(args," ");
         if (tokens.countTokens()!=2){
-            client.getOutput().sendMessage(ServiceChat.SERVER_NAME,"Expected 2 arguments");
+            client.getOutput().sendMessage("Expected 2 arguments");
         }else{
             String username=tokens.nextToken();
             String pubKey=tokens.nextToken();
@@ -94,7 +94,7 @@ public class AdminCommand {
         StringTokenizer tokens=new StringTokenizer(args," ");
 
         if (tokens.countTokens()<2){
-            client.getOutput().sendMessage(ServiceChat.SERVER_NAME,"This command expected 2 arguments");
+            client.getOutput().sendMessage("This command expected 2 arguments");
         }else{
             String username=tokens.nextToken();
             //get the remaining args
@@ -105,14 +105,14 @@ public class AdminCommand {
             if (target==null){
                 client.getOutput().sendFormattedMessage("The user \"%s\" does not seem to be connected",username);
             }else{
-                target.getInput().sendMessage(ServiceChat.SERVER_NAME,message);
+                target.getInput().sendMessage(message);
             }
         }
     }
 
     private void serverCommand(String args) throws PacketChatException{
         if (args.isEmpty()) return;
-        ServerChatManager.getInstance().getClients().getOutput().sendMessage(ServiceChat.SERVER_NAME,args);
+        ServerChatManager.getInstance().getClients().getOutput().sendMessage(args);
     }
 
     private void helpCommand() throws PacketChatException{
@@ -130,7 +130,7 @@ public class AdminCommand {
         builder.append("/server - send message as server\n");
         builder.append("/help - print help menu\n");
 
-        client.getOutput().sendMessage(ServiceChat.SERVER_NAME,builder.toString());
+        client.getOutput().sendMessage(builder.toString());
     }
 
 

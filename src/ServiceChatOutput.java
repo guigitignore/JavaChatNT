@@ -70,5 +70,6 @@ public class ServiceChatOutput  extends LoopWorker implements IPacketChatOutput{
 
     public void init() throws Exception {}
 
+    public void cleanup() throws Exception {}
     
 }

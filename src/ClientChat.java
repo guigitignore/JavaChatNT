@@ -14,9 +14,6 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     private ClientChatInput clientInput;
     private ClientChatOutput clientOutput;
 
-    private PacketChatOutput input;
-    private PacketChatOutput output;
-
     private ClientChatRequest requestManager;
 
     public ClientChat(String host,int port) throws Exception{
@@ -47,12 +44,12 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         return bucket;
     }
 
-    public PacketChatOutput getInput(){
-        return input;
+    public ClientChatInput getInput(){
+        return clientInput;
     }
 
-    public PacketChatOutput getOutput(){
-        return output;
+    public ClientChatOutput getOutput(){
+        return clientOutput;
     }
 
     public ClientChatRequest getRequestManager(){
@@ -82,9 +79,6 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
         clientInput=new ClientChatInput(this);
         clientOutput=new ClientChatOutput(this);
-
-        input=new PacketChatOutput(clientInput);
-        output=new PacketChatOutput(clientOutput);
 
         requestManager=new ClientChatRequest(this);
     }

@@ -27,11 +27,11 @@ public class ServiceChatCollection extends ArrayList<ServiceChat> implements ISe
     }
 
     public PacketChatOutput getOutput(){
-        return new PacketChatOutput(new PacketChatMulticast(getOutputInterfaces()));
+        return new PacketChatOutput(new PacketChatMulticast(getOutputInterfaces()),ServiceChat.SERVER_NAME);
     }
 
     public PacketChatOutput getInput(){
-        return new PacketChatOutput(new PacketChatMulticast(getInputInterfaces()));
+        return new PacketChatOutput(new PacketChatMulticast(getInputInterfaces()),ServiceChat.SERVER_NAME);
     }
     
 }

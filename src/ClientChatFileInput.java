@@ -21,8 +21,8 @@ public class ClientChatFileInput extends LoopWorker {
         sender=new String(fileInit.getField(0));
         filename=new String(fileInit.getField(1));
 
-        output=new PacketChatOutput(client.getMessageInterface());
-        server=new PacketChatOutput(client);
+        output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
+        server=new PacketChatOutput(client,client.getUser().getName());
     }
 
     private boolean sendClientRequest() throws InterruptedException{
@@ -31,9 +31,9 @@ public class ClientChatFileInput extends LoopWorker {
 
     public void init() throws Exception {
         if (sendClientRequest()){
-
+            server.sendFileInitSucess(nounce);
         }else{
-
+            server.sendFileInitFailure(nounce);
         }
     }
 
@@ -42,7 +42,7 @@ public class ClientChatFileInput extends LoopWorker {
     }
 
 
-    public void end() throws Exception {
-        
-    }    
+    public void end() throws Exception {}
+    
+    public void cleanup() throws Exception {}
 }

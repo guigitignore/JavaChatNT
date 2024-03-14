@@ -8,7 +8,7 @@ public class ClientChatRequest {
     private PacketChatOutput output;
 
     public ClientChatRequest(ClientChat client){
-        output=new PacketChatOutput(client.getMessageInterface());
+        output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
     }
 
     public boolean sendConfirmationRequest(String message) throws InterruptedException{
@@ -25,7 +25,7 @@ public class ClientChatRequest {
         builder.append(String.format("\n\"/deny %d\" to reject\n",confirmationId));
 
         try{
-            output.sendMessage(ClientChat.CLIENT_NAME, builder.toString());
+            output.sendMessage(builder.toString());
         }catch(PacketChatException e){
             throw new InterruptedException("Cannot communicate with client");
         }

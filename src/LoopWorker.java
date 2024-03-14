@@ -29,6 +29,8 @@ public abstract class LoopWorker extends Thread implements IWorker{
 
     public abstract void end() throws Exception;
 
+    public abstract void cleanup() throws Exception;
+
     public final void run(){
         boolean initSuccess;
 
@@ -47,10 +49,13 @@ public abstract class LoopWorker extends Thread implements IWorker{
                     break;
                 }
             }
+            try{
+                end();
+            }catch(Exception e){}
         }
 
         try{
-            end();
+            cleanup();
         }catch(Exception e){}
 
         WorkerManager.getInstance().remove(this);

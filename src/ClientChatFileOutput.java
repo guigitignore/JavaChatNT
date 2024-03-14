@@ -19,17 +19,17 @@ public class ClientChatFileOutput extends LoopWorker{
         filename=(String)getArgs()[1];
         dest=(String)getArgs()[2];
 
-        output=new PacketChatOutput(client.getMessageInterface());
-        server=new PacketChatOutput(client);
+        output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
+        server=new PacketChatOutput(client,client.getUser().getName());
     }
 
     public void init() throws Exception {
         nounce=(byte)0;
-        server.sendFileInitRequest(nounce, client.getUser().getName(), filename, dest);
+        server.sendFileInitRequest(nounce, filename, dest);
         PacketChat res=client.getBucket().waitPacketAckByNounce(nounce);
 
         if (res.getStatus()==PacketChat.STATUS_ERROR){
-            output.sendFormattedMessage(ClientChat.CLIENT_NAME, "%s reject file %s",dest,filename);
+            output.sendFormattedMessage("%s reject file %s",dest,filename);
         }
     }
 
@@ -38,8 +38,8 @@ public class ClientChatFileOutput extends LoopWorker{
     }
 
 
-    public void end() throws Exception {
-        
-    }
+    public void end() throws Exception {}
+
+    public void cleanup() throws Exception {}
 
 }

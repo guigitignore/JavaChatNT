@@ -1,27 +1,35 @@
 import java.util.Collection;
 
 public class PacketChatOutput {
-    public final static String DEFAULT_SENDER="[SERVER]";
-    
     private IPacketChatOutput output;
+    private String sender;
+
+    public PacketChatOutput(IPacketChatOutput output,String sender){
+        this.output=output;
+        this.sender=sender;
+    }
 
     public PacketChatOutput(IPacketChatOutput output){
-        this.output=output;
+        this(output,"");
     }
 
     public IPacketChatOutput getInterface(){
         return output;
     }
 
+    public void setSender(String sender){
+        this.sender=sender;
+    }
+
     public void sendPacket(PacketChat packet) throws PacketChatException{
         output.putPacketChat(packet);
     }
 
-    public void sendMessage(String sender,String message,String...dests) throws PacketChatException{
+    public void sendMessage(String message,String...dests) throws PacketChatException{
         sendPacket(PacketChatFactory.createMessagePacket(sender, message, dests));
     }
 
-    public void sendFormattedMessage(String sender,String format,Object...args) throws PacketChatException{
+    public void sendFormattedMessage(String format,Object...args) throws PacketChatException{
         sendMessage(sender,String.format(format, args));
     }
 
@@ -61,7 +69,7 @@ public class PacketChatOutput {
         sendPacket(PacketChatFactory.createFileInitStatus(nounce,false));
     }
 
-    public void sendFileInitRequest(byte nounce,String sender,String filename,String dest) throws PacketChatException{
+    public void sendFileInitRequest(byte nounce,String filename,String dest) throws PacketChatException{
         sendPacket(PacketChatFactory.createFileInitPacket(nounce, sender,filename, dest));
     }
 }

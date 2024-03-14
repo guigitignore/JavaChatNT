@@ -6,8 +6,23 @@ public class NounceManager {
 
     public boolean registerNounce(byte nounce,String username){
         synchronized(nounces){
-            return username!=null && nounces.putIfAbsent(nounce, new SimpleEntry<String,Boolean>(username,false))!=null;
+            return username!=null && nounces.putIfAbsent(nounce, new SimpleEntry<String,Boolean>(username,false))==null;
         }
+    }
+
+    public Byte generateNounce(String username){
+        Byte result=null;
+        SimpleEntry<String,Boolean> entry=new SimpleEntry<String,Boolean>(username,false);
+
+        synchronized(nounces){
+            for (int i=0;i<256;i++){
+                if (nounces.putIfAbsent((byte)i, entry)==null){
+                    result=(byte)i;
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     public boolean allowNounce(byte nounce,String username){
