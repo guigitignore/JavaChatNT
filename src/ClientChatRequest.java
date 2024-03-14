@@ -22,7 +22,7 @@ public class ClientChatRequest {
         StringBuilder builder=new StringBuilder();
         builder.append(message);
         builder.append(String.format("\n\"/allow %d\" to accept",confirmationId));
-        builder.append(String.format("\n\"/deny %d\" to reject\n",confirmationId));
+        builder.append(String.format("\n\"/deny %d\" to reject",confirmationId));
 
         try{
             output.sendMessage(builder.toString());

@@ -31,7 +31,7 @@ public class ClientChatFileInput extends LoopWorker {
     }
 
     private boolean sendClientRequest() throws InterruptedException{
-        return client.getRequestManager().sendConfirmationRequest(String.format("%s want to send you a file named %s.", sender,filename));
+        return client.getRequestManager().sendConfirmationRequest(String.format("user \"%s\" want to send you a file named \"%s\".", sender,filename));
     }
 
     public void init() throws Exception {
@@ -42,7 +42,7 @@ public class ClientChatFileInput extends LoopWorker {
             try{
                 File file=new File("downloads/"+filename);
                 file.getParentFile().mkdirs(); 
-                fileOutputStream=new FileOutputStream(filename);
+                fileOutputStream=new FileOutputStream(file,false);
                 server.sendFileInitSucess(nounce);
             }catch(IOException e){
                 server.sendFileInitFailure(nounce);
@@ -57,20 +57,22 @@ public class ClientChatFileInput extends LoopWorker {
 
     public void loop() throws Exception {
         PacketChat res=client.getBucket().waitPacketByType(PacketChat.FILE_DATA,PacketChat.FILE_OVER);
+
         if (res.getCommand()==PacketChat.FILE_OVER){
             try{
                 fileOutputStream.close();
                 server.sendFileOverSuccess(nounce);
-                output.sendFormattedMessage("File %s sucessfully received!",filename);
+                output.sendFormattedMessage("File \"%s\" sucessfully received!",filename);
                 throw new InterruptedException();
             }catch(IOException e){
-                output.sendFormattedMessage("Cannot close filename %s !",filename);
+                output.sendFormattedMessage("Cannot close filename \"%s\" !",filename);
                 server.sendFileOverFailure(nounce);
                 throw e;
             }
         }
 
         try{
+            if (res.getFieldsNumber()!=3) throw new IOException("Cannot read data");
             fileOutputStream.write(res.getField(1));
             server.sendFileDataSuccess(nounce);
         }catch(IOException e){

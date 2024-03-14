@@ -8,6 +8,7 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
     private ClientChat client;
     private AtomicBoolean isConnected;
     private RSAPrivateKey privateKey=null;
+    private PacketChatSanitizer sanitizer;
 
     public ClientChatInput(ClientChat client){
         super(client);
@@ -27,14 +28,25 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
         privateKey=key;
     }
 
-    public void putPacketChat(PacketChat packet) throws PacketChatException {        
-        packet=isConnected.get()?handleLoginPacket(packet):handleLogoutPacket(packet);
+    public void putPacketChat(PacketChat packet) throws PacketChatException {
+        Logger.i("got packet in input %s",packet.toString());
+        try{
+            sanitizer.client(packet);
+        }catch(PacketChatException e){
+            Logger.w("Packet dropped: %s",e.getMessage());
+            packet=null;
+        }
+
+        if (packet!=null){
+            packet=isConnected.get()?handleLoginPacket(packet):handleLogoutPacket(packet);
+            if (packet!=null) client.getMessageInterface().putPacketChat(packet);
+        }
     
-        if (packet!=null) client.getMessageInterface().putPacketChat(packet);
     }
 
     public void setup() throws Exception {
         client=(ClientChat)getArgs()[0];
+        sanitizer=new PacketChatSanitizer(client);
     }
 
     
@@ -43,23 +55,15 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
     }
 
     public void loop() throws Exception {
-        try{
-            PacketChat packet;
+        PacketChat packet;
 
-            if (isConnected.get()){
-                packet=client.getBucket().waitPacketByType(PacketChat.SEND_MSG,PacketChat.FILE_INIT);
-                Logger.i("got packet in login input %s",packet==null?"null":packet.toString());
-            }else{
-                packet=client.getBucket().waitPacketByType(PacketChat.AUTH,PacketChat.CHALLENGE);
-                Logger.i("got packet in logout input %s",packet==null?"null":packet.toString());
-            }
-            
-            putPacketChat(packet);
-        }catch(Exception e){
-            e.printStackTrace();
-            throw e;
+        if (isConnected.get()){
+            packet=client.getBucket().waitPacketByType(PacketChat.SEND_MSG,PacketChat.FILE_INIT);
+        }else{
+            packet=client.getBucket().waitPacketByType(PacketChat.AUTH,PacketChat.CHALLENGE);
         }
         
+        putPacketChat(packet);
     }
 
     public void cleanup() throws Exception {
@@ -67,9 +71,10 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
     }
 
     private PacketChat handleLoginPacket(PacketChat packet) throws PacketChatException{
+
         switch(packet.getCommand()){
             case PacketChat.FILE_INIT:
-                new ClientChatFileInput(client, packet);
+                if (packet.getFieldsNumber()==3) new ClientChatFileInput(client, packet);
                 packet=null;
                 break;
         }

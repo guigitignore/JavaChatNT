@@ -37,6 +37,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
         packetInterface.putPacketChat(packet);
+        Logger.i("send packet: %s",packet.toString());
     }
 
     public User getUser() {
@@ -98,7 +99,6 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
     private void mainloop() throws IOException{
         PacketChat packet;
-        PacketChatSanitizer sanitizer=new PacketChatSanitizer(this);
 
         while (true){
             try{
@@ -109,10 +109,9 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
                 break;
             }
             try{
-                sanitizer.client(packet);
                 bucket.putPacketChat(packet);
             }catch(PacketChatException e){
-                Logger.w("Packet dropped: %s",e.getMessage());
+                Logger.w("Cannot put packet in bucket: %s",e.getMessage());
             }
             
         }

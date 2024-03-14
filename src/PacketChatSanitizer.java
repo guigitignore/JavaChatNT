@@ -71,7 +71,7 @@ public class PacketChatSanitizer {
         }
     }
 
-    public void clientLogoutSanitize(PacketChat packet) throws PacketChatException{
+    private void clientLogoutSanitize(PacketChat packet) throws PacketChatException{
         switch(packet.getCommand()){
             case PacketChat.AUTH:
             case PacketChat.CHALLENGE:
@@ -82,7 +82,7 @@ public class PacketChatSanitizer {
         }
     }
 
-    public void clientLoginSanitize(PacketChat packet) throws PacketChatException{
+    private void clientLoginSanitize(PacketChat packet) throws PacketChatException{
         switch(packet.getCommand()){
             case PacketChat.SEND_MSG:
                 sanitizePacketVAArgs(packet, 2);

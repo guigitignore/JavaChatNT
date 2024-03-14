@@ -13,6 +13,9 @@ public class UserCommand {
                 }
                 user.getOutput().sendMessage(builder.toString());
                 break;
+            case "whoami":
+                user.getOutput().sendFormattedMessage("username=\"%s\" account_type=%s client_type=%s",user.getUser().getName(),user.getUser().getTypeName(),user.getClientType().name());
+                break;
             case "help":
                 builder=new StringBuilder();
                 builder.append("list of available commands:\n");

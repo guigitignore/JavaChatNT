@@ -43,20 +43,23 @@ public class PacketChatBucket implements IPacketChatOutput{
             locks=waiters.get(event);
         }
         if (locks!=null){
-            while(true){
-                lock=locks.removeLast();
-                if (lock==null) break;
-                
-                synchronized(lock){
-                    //if lock!=null then it means that it has already been consumed
-                    if (lock.get()==null){
-                        lock.set(packet);
-                        lock.notify();
-                        result=true;
-                        break;
+            synchronized(locks){
+                while(locks.size()>0){
+                    lock=locks.removeLast();
+                    if (lock==null) break;
+                    
+                    synchronized(lock){
+                        //if lock!=null then it means that it has already been consumed
+                        if (lock.get()==null){
+                            lock.set(packet);
+                            lock.notify();
+                            result=true;
+                            break;
+                        }
                     }
                 }
             }
+            
         }
 
         return result;

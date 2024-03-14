@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
@@ -37,16 +38,16 @@ public class ClientChatFileOutput extends LoopWorker{
         Byte testNounce=client.getOutgoingFiles().generateNounce(dest);
 
         if (testNounce==null){
-            output.sendFormattedMessage("Cannot get a valid nounce for file %s",filename);
+            output.sendFormattedMessage("Cannot get a valid nounce for file \"%s\"",filename);
             throw new InterruptedException();
         }
         nounce=testNounce;
 
-        server.sendFileInitRequest(nounce, filename, dest);
+        server.sendFileInitRequest(nounce, new File(filename).getName(), dest);
         PacketChat res=client.getBucket().waitPacketAckByNounce(nounce);
 
         if (res.getStatus()==PacketChat.STATUS_ERROR){
-            output.sendFormattedMessage("%s reject file %s",dest,filename);
+            output.sendFormattedMessage("user \"%s\" reject your file \"%s\"",dest,filename);
             throw new InterruptedException();
         }
 
@@ -54,7 +55,7 @@ public class ClientChatFileOutput extends LoopWorker{
         try{
             fileInputStream=new FileInputStream(filename);
         }catch(IOException e){
-            output.sendFormattedMessage("Cannot open file %s",filename);
+            output.sendFormattedMessage("Cannot open file \"%s\"",filename);
             server.sendFileOverRequest(nounce, dest);
             client.getBucket().waitPacketAckByNounce(nounce);
             throw e;
@@ -68,7 +69,7 @@ public class ClientChatFileOutput extends LoopWorker{
         try{
             int n=fileInputStream.read(chunk);
             if (n<=0){
-                output.sendFormattedMessage("Finished to send %s to %s",filename,dest);
+                output.sendFormattedMessage("Finished to send file \"%s\" to user \"%s\"",filename,dest);
                 throw new IOException("EOF");
             }
             server.sendFileDataRequest(nounce, Arrays.copyOfRange(chunk, 0, n), dest);
@@ -79,7 +80,7 @@ public class ClientChatFileOutput extends LoopWorker{
             try{
                 fileInputStream.close();
             }catch(IOException e2){
-                output.sendFormattedMessage("Cannot close file %s",filename);
+                output.sendFormattedMessage("Cannot close file \"%s\"",filename);
             }
             server.sendFileOverRequest(nounce, dest);
             client.getBucket().waitPacketAckByNounce(nounce);

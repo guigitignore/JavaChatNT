@@ -30,14 +30,9 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
     public void init() throws Exception {}
 
     public void loop() throws Exception {
-        try{
-            PacketChat packet;
-            packet=client.getMessageInterface().getPacketChat();
-            putPacketChat(packet);
-        }catch(Exception e){
-            e.printStackTrace();
-            throw e;
-        }
+        PacketChat packet;
+        packet=client.getMessageInterface().getPacketChat();
+        putPacketChat(packet);
     }
 
     public void cleanup() throws Exception {
@@ -93,11 +88,11 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
             switch (command){
                 
                 case "sendfileto":
-                    //not forward packet
                     sendFileTo(args);
                     packet=null;
                     break;
                 case "sendfiletoall":
+                    sendFileToAll(args);
                     packet=null;
                     break;
                 case "allow":
@@ -162,14 +157,30 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         String dest;
 
         if (tokens.countTokens()<2){
-            output.sendMessage("this command expects 2 arguments");
+            output.sendMessage("this command expects at least 2 arguments");
         }else{
             filename=tokens.nextToken();
-            dest=tokens.nextToken();
 
             if (checkFile(filename)){
-                new ClientChatFileOutput(client, filename, dest);
+                do{
+                    dest=tokens.nextToken();
+                    new ClientChatFileOutput(client, filename, dest);
+                }while(tokens.hasMoreTokens());
+            }else{
+                output.sendFormattedMessage("the file \"%s\" does not exists",filename);
             }
+        }
+    }
+
+    private void sendFileToAll(String filename) throws PacketChatException{
+        if (checkFile(filename)){
+            for (String user:getConnectedUsers()){
+                if (!user.equals(client.getUser().getName())){
+                    new ClientChatFileOutput(client, filename, user);
+                }
+            }
+        }else{
+            output.sendFormattedMessage("the file \"%s\" does not exists",filename);
         }
     }
 
@@ -201,9 +212,5 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
             output.sendMessage("Invalid request number");
         }
     }
-
-    
-
-    
-    
+  
 }
