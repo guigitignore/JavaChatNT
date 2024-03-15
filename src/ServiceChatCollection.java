@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class ServiceChatCollection extends ArrayList<ServiceChat> implements IServiceChat{
     public ServiceChatCollection(){
@@ -11,19 +12,19 @@ public class ServiceChatCollection extends ArrayList<ServiceChat> implements ISe
     }
 
     public Collection<User> getUsers(){
-        return stream().map(ServiceChat::getUser).toList();
+        return stream().map(ServiceChat::getUser).collect(Collectors.toList());
     }
 
     public Collection<String> getUsernames(){
-        return stream().map(ServiceChat::getUser).map(User::getName).toList();
+        return stream().map(ServiceChat::getUser).map(User::getName).collect(Collectors.toList());
     }
 
     public Collection<IPacketChatOutput> getOutputInterfaces(){
-        return stream().map(ServiceChat::getOutput).map(PacketChatOutput::getInterface).toList();
+        return stream().map(ServiceChat::getOutput).map(PacketChatOutput::getInterface).collect(Collectors.toList());
     }
 
     public Collection<IPacketChatOutput> getInputInterfaces(){
-        return stream().map(ServiceChat::getInput).map(PacketChatOutput::getInterface).toList();
+        return stream().map(ServiceChat::getInput).map(PacketChatOutput::getInterface).collect(Collectors.toList());
     }
 
     public PacketChatOutput getOutput(){

@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class PacketChatTelnetInterface implements IPacketChatInterface {
@@ -56,7 +57,7 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                 if (fieldsNumber>2){
                     String dest=String.join(",",IntStream.range(2, fieldsNumber).mapToObj(index -> {
                         return new String(packet.getField(index));
-                    }).toList());
+                    }).collect(Collectors.toList()));
                     output.printf("%s->%s %s\n",sender,dest,message);
                 }else{
                     output.printf("%s %s\n",sender,message);
@@ -99,7 +100,7 @@ public class PacketChatTelnetInterface implements IPacketChatInterface {
                 if (line.startsWith("/")){
                     StringTokenizer tokens=new StringTokenizer(line," ");
                     String command=tokens.nextToken().substring(1).toLowerCase();
-                    String args=tokens.hasMoreTokens()?tokens.nextToken("").strip():"";
+                    String args=tokens.hasMoreTokens()?tokens.nextToken("").trim():"";
                     packet=handleClientCommand(command, args);
                 }else{
                     packet=PacketChatFactory.createMessagePacket(SENDER, line);

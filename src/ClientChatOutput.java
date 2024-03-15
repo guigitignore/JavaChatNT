@@ -92,7 +92,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         if (message.startsWith("/")){
             tokens=new StringTokenizer(message," ");
             String command=tokens.nextToken().substring(1).toLowerCase();
-            String args=tokens.hasMoreTokens()?tokens.nextToken("").strip():"";
+            String args=tokens.hasMoreTokens()?tokens.nextToken("").trim():"";
 
             switch (command){
                 
@@ -162,7 +162,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
     }
 
     private void setEncryptionMode(String arg) throws PacketChatException{
-        switch(arg.strip().toLowerCase()){
+        switch(arg.trim().toLowerCase()){
             case "on":
                 encryption.set(true);
                 output.sendMessage("activate encryption");

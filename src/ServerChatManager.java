@@ -2,6 +2,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 public class ServerChatManager {
@@ -74,11 +75,11 @@ public class ServerChatManager {
     }
 
     public ServiceChatCollection getClientsByTag(String tag){
-        return new ServiceChatCollection(getClients().stream().filter(client -> client.getUser().getTag().equals(tag)).toList());
+        return new ServiceChatCollection(getClients().stream().filter(client -> client.getUser().getTag().equals(tag)).collect(Collectors.toList()));
     }
 
     public ServiceChatCollection getClientsByName(Collection<String> names){
-        return new ServiceChatCollection(names.stream().map(this::getClient).filter(Objects::nonNull).toList());
+        return new ServiceChatCollection(names.stream().map(this::getClient).filter(Objects::nonNull).collect(Collectors.toList()));
     }
 
     public ServiceChatCollection getClientsByName(String...names){

@@ -9,7 +9,7 @@ public abstract class User {
     public User(String name,byte[] key,String tag){
         this.key=key;
         this.name=name;
-        this.tag=tag.strip().toUpperCase();
+        this.tag=tag.trim().toUpperCase();
     }
 
     public User(String name,byte[] key){

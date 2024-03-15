@@ -1,9 +1,26 @@
 # This makefile allows to compile automatically java files and produce a jar
 
 #commands
-JAVAC = javac
-JAR= jar
-JAVA=java
+	ifeq ($(OS),Windows_NT)
+	JAVADIR=C:\Program Files (x86)\Java\jdk1.8.0_202\bin
+	JAVAC="$(JAVADIR)\javac"
+	JAR="$(JAVADIR)\jar"
+	JAVA="$(JAVADIR)\java"
+
+	MKDIR=md
+	RMRF=rmdir /s /q
+
+	BOUNCY_CASTLE=.\lib\bcprov-jdk18on-177.jar
+else
+	JAVAC = javac
+	JAR= jar
+	JAVA=java
+
+	MKDIR=mkdir -p
+	RMRF=rm -rf
+
+	BOUNCY_CASTLE=lib/bcprov-jdk18on-177.jar
+endif
 
 
 MANIFEST= META-INF/MANIFEST.MF
@@ -15,7 +32,7 @@ OUT_DIR=out
 SRC_DIR=src
 BUILD_DIR = build
 LOG_DIR= logs
-BOUNCY_CASTLE=lib/bcprov-jdk18on-177.jar
+
 
 # Recursive Wildcard function
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *,%,$2),$d))
@@ -38,7 +55,7 @@ all: $(OBJ_DIRS) $(OBJ)
 
 $(OBJ_DIRS) $(OUT_DIR):
 	@echo "Creating folder $@..."
-	@mkdir -p $@	
+	$(MKDIR) ${@:/=}
 
 
 $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
@@ -52,11 +69,11 @@ $(OUT): $(OBJ) $(OUT_DIR)
 
 clean:
 	@echo "Cleaning build"
-	@rm -rf $(BUILD_DIR) $(OUT_DIR)
+	@$(RMRF) $(BUILD_DIR) $(OUT_DIR)
 
 cleanlogs:
 	@echo "Removing logs..."
-	@rm -rf $(LOG_DIR)
+	@$(RMRF) $(LOG_DIR)
 
 jar: $(OUT)
 
