@@ -75,6 +75,7 @@ public class PacketChatFactory{
         if (encrypted) packet.setFlag(PacketChat.ENCRYPTION_FLAG);
         packet.addField(sender.getBytes());
         packet.addField(filename);
+        packet.addField(new byte[]{(byte)0x0,(byte)0x2,(byte)0x3,(byte)0x4});
         packet.addField(dest.getBytes());
         return packet;
     }

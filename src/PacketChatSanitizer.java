@@ -52,7 +52,7 @@ public class PacketChatSanitizer {
                 packet.clearFields();
                 break;
             case PacketChat.FILE_INIT:
-                sanitizePacketArgsNumber(packet, 0,3);
+                sanitizePacketArgsNumber(packet, 0,4);
                 if (packet.getFieldsNumber()>0) packet.replaceField(0,client.getUser().getName().getBytes());
                 break;
             case PacketChat.FILE_DATA:
@@ -91,7 +91,7 @@ public class PacketChatSanitizer {
                 sanitizePacketVAArgs(packet, 1);
                 break;
             case PacketChat.FILE_INIT:
-                sanitizePacketArgsNumber(packet, 0,3);
+                sanitizePacketArgsNumber(packet, 0,4);
                 break;
             case PacketChat.FILE_DATA:
                 sanitizePacketArgsNumber(packet, 0,3);

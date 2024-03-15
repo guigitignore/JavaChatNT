@@ -9,18 +9,20 @@ public class PacketChat {
     public final static byte CHALLENGE =          (byte)0x01;
     public final static byte EXIT =               (byte)0x02;
     public final static byte SEND_MSG =           (byte)0x03;
-    public final static byte LIST_USERS =         (byte)0x04;
-    public final static byte FILE_INIT =          (byte)0x05;
-    public final static byte FILE_DATA =          (byte)0x06;
-    public final static byte FILE_OVER =          (byte)0x07;
+    public final static byte MSG_ACK =            (byte)0x04;
+    public final static byte LIST_USERS =         (byte)0x05;
+    public final static byte FILE_INIT =          (byte)0x06;
+    public final static byte FILE_DATA =          (byte)0x07;
     public final static byte FILE_ACK =           (byte)0x08;
+    public final static byte FILE_OVER =          (byte)0x09;
+    
     public final static byte HELLO =              (byte)0xFF;
 
     public final static byte STATUS_SUCCESS=      (byte)0x00;
     public final static byte STATUS_ERROR=        (byte)0x01;
-    public final static byte ENCRYPTION_FLAG=     (byte)0x01;
+    public final static byte ENCRYPTION_FLAG=     (byte)0b10000000;
 
-    public final static byte USERSTRUCT_FLAG=     (byte)0x01;
+    public final static byte USERSTRUCT_FLAG=     (byte)0b01000000;
 
     private final static int HEADER_SIZE=8;
     private final static int MAX_DATA_SIZE=0x100000;

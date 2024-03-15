@@ -129,7 +129,7 @@ public class ServiceChatInput implements IPacketChatOutput{
         byte nounce=packet.getParam();
 
         if (packet.getFieldsNumber()>0){
-            destName=new String(packet.getField(2));
+            destName=new String(packet.getField(3));
             dest=ServerChatManager.getInstance().getClient(destName);
 
             if (dest==null){

@@ -47,8 +47,8 @@ class Main{
         
         if (!Logger.addOutput("server")) Logger.e("Cannot write server logs in file");
         Logger.i("Starting engine...");
-        new ServerChat(DEFAULT_SERVER_PORT,User.USER_TAG);
-        new ServerChat(DEFAULT_SERVER_PORT+1,User.ADMIN_TAG);
+        new ServerChat(1234,User.USER_TAG);
+        //new ServerChat(DEFAULT_SERVER_PORT+1,User.ADMIN_TAG);
 
     }
 
