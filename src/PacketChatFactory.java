@@ -78,10 +78,11 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createFileDataPacket(byte nounce,String sender,byte[] data,String dest){
+    public static PacketChat createFileDataPacket(boolean encrypted,byte nounce,String sender,byte[] data,String dest){
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.FILE_DATA);
+        if (encrypted) packet.setFlag(PacketChat.ENCRYPTION_FLAG);
         packet.addField(sender.getBytes());
         packet.addField(data);
         packet.addField(dest.getBytes());

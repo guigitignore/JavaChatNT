@@ -65,6 +65,8 @@ public class ClientChatFileOutput extends LoopWorker{
 
     public void loop() throws Exception {
         PacketChat res;
+        byte[] data;
+        byte[] encryptedData=null;
 
         try{
             int n=fileInputStream.read(chunk);
@@ -72,7 +74,22 @@ public class ClientChatFileOutput extends LoopWorker{
                 output.sendFormattedMessage("Finished to send file \"%s\" to user \"%s\"",filename,dest);
                 throw new IOException("EOF");
             }
-            server.sendFileDataRequest(nounce, Arrays.copyOfRange(chunk, 0, n), dest);
+            data=Arrays.copyOfRange(chunk, 0, n);
+
+            if (client.getOutput().getEncryptionStatus()){
+                try{
+                    encryptedData=DESEncoder.getInstance().encode(data);
+                }catch(Exception e){
+                    Logger.w("Cannot encrypt data of file \"%d\"",filename);
+                }
+            }
+            
+            if (encryptedData==null){
+                server.sendFileDataRequest(nounce, data, dest);
+            }else{
+                server.sendFileEncryptedDataRequest(nounce, encryptedData, dest);
+            }
+            
             res=client.getBucket().waitPacketAckByNounce(nounce);
 
             if (res.getStatus()==PacketChat.STATUS_ERROR) throw new IOException("Interrupt");

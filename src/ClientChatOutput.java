@@ -1,11 +1,12 @@
 import java.io.File;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IUserConnection{
     private ClientChat client;
     private User user=null;
     private PacketChatOutput output;
-    private boolean encryption=false;
+    private AtomicBoolean encryption=new AtomicBoolean(false);
 
     public ClientChatOutput(ClientChat client){
         super(client);
@@ -27,6 +28,9 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
     }
 
+    public boolean getEncryptionStatus(){
+        return encryption.get();
+    }
     
     public void init() throws Exception {}
 
@@ -117,7 +121,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
                     break;
             }
         }else{
-            if (encryption){
+            if (getEncryptionStatus()){
                 try{
                     packet.replaceField(1,DESEncoder.getInstance().encode(packet.getField(1)));
                     packet.setFlag(PacketChat.ENCRYPTION_FLAG);
@@ -143,11 +147,11 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
     private void setEncryptionMode(String arg) throws PacketChatException{
         switch(arg.strip().toLowerCase()){
             case "on":
-                encryption=true;
+                encryption.set(true);
                 output.sendMessage("activate encryption");
                 break;
             case "off":
-                encryption=false;
+                encryption.set(false);
                 output.sendMessage("deactivate encryption");
                 break;
             default:
@@ -175,6 +179,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         builder.append("/listusers - list connected users\n");
         builder.append("/allow - accept a request\n");
         builder.append("/deny - reject a request\n");
+        builder.append("/encryption - manage DES encryption of data\n");
         builder.append("/help - print help menu\n");
 
         output.sendMessage(builder.toString());

@@ -46,13 +46,16 @@ public class ServiceChatOutput  extends LoopWorker implements IPacketChatOutput{
     }
 
     private PacketChat handleMessagePacket(PacketChat packet){
-        if (packet.getFlag()==PacketChat.ENCRYPTION_FLAG && client.getClientType()!=ClientType.PACKETCHAT_CLIENT){
+        if (packet.getFlag()==PacketChat.ENCRYPTION_FLAG && client.getClientType()==ClientType.TELNET_CLIENT){
+            Logger.i("cannot send encrypted message to telnet client");
             packet=null;
         }
         return packet;
     }
     
     private void handlePacket(PacketChat packet) throws PacketChatException{
+        PacketChat packetCopy=packet;
+
         switch (packet.getCommand()){
             case PacketChat.FILE_INIT:
                 packet=handleFileInitPacket(packet);
@@ -67,7 +70,11 @@ public class ServiceChatOutput  extends LoopWorker implements IPacketChatOutput{
 
         //send packet 
         if (packet==null){
-            Logger.i("drop packet in output");
+            if (client.getUser()==null){
+                Logger.i("drop packet in output for %s: %s",client.getDescription(),packetCopy.toString());
+            }else{
+                Logger.i("drop packet in output for user \"%s\": %s",client.getUser().getName(),packetCopy.toString());
+            }
         }else{
             Logger.i("send packet: %s",packet);
             client.putPacketChat(packet);

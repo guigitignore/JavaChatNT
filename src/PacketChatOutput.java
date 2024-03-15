@@ -74,7 +74,11 @@ public class PacketChatOutput {
     }
 
     public void sendFileDataRequest(byte nounce,byte[] data,String dest) throws PacketChatException{
-        sendPacket(PacketChatFactory.createFileDataPacket(nounce, sender,data, dest));
+        sendPacket(PacketChatFactory.createFileDataPacket(false,nounce, sender,data, dest));
+    }
+
+    public void sendFileEncryptedDataRequest(byte nounce,byte[] data,String dest) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileDataPacket(true,nounce, sender,data, dest));
     }
 
     public void sendFileDataSuccess(byte nounce) throws PacketChatException{

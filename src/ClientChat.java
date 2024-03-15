@@ -105,7 +105,6 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
                 packet=packetInterface.getPacketChat();
                 Logger.i("got packet: %s",packet.toString());
             }catch(PacketChatException e){
-                Logger.w("exit input loop: %s",e.getMessage());
                 break;
             }
             try{

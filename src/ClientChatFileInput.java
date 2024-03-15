@@ -56,6 +56,7 @@ public class ClientChatFileInput extends LoopWorker {
     }
 
     public void loop() throws Exception {
+        byte[] data;
         PacketChat res=client.getBucket().waitPacketByType(PacketChat.FILE_DATA,PacketChat.FILE_OVER);
 
         if (res.getCommand()==PacketChat.FILE_OVER){
@@ -72,8 +73,21 @@ public class ClientChatFileInput extends LoopWorker {
         }
 
         try{
-            if (res.getFieldsNumber()!=3) throw new IOException("Cannot read data");
-            fileOutputStream.write(res.getField(1));
+            if (res.getFieldsNumber()!=3){
+                Logger.w("Malformed packet packet file data");
+                throw new IOException();
+            }
+            data=res.getField(1);
+
+            if (res.getFlag()==PacketChat.ENCRYPTION_FLAG){
+                try{
+                    data=DESEncoder.getInstance().decode(data);
+                }catch(Exception e){
+                    Logger.w("Cannot decode data of file \"%s\"",filename);
+                    throw new IOException();
+                }
+            }
+            fileOutputStream.write(data);
             server.sendFileDataSuccess(nounce);
         }catch(IOException e){
             server.sendFileDataFailure(nounce);
