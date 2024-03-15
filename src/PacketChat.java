@@ -88,8 +88,13 @@ public class PacketChat {
 
     @Override
     public String toString(){
-        return String.format("PacketChat<command=%d|status=%d|param=%d|flag=%d|fields=%d>", 
-                getCommand(),getStatus(),getParam(),getFlag(),getFieldsNumber());
+        return String.format("PacketChat<command=%d|status=%d|param=%d|flag=%s|fields=%d>", 
+            getCommand(),
+            getStatus(),
+            getParam(),
+            String.format("%8s",Integer.toBinaryString(getFlag()&0xFF)).replace(' ','0'),
+            getFieldsNumber()
+        );
     }
 
     public byte[] getBytes(){
