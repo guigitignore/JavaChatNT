@@ -68,12 +68,13 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createFileInitPacket(byte nounce,String sender,String filename,String dest){
+    public static PacketChat createFileInitPacket(boolean encrypted,byte nounce,String sender,byte[] filename,String dest){
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.FILE_INIT);
+        if (encrypted) packet.setFlag(PacketChat.ENCRYPTION_FLAG);
         packet.addField(sender.getBytes());
-        packet.addField(filename.getBytes());
+        packet.addField(filename);
         packet.addField(dest.getBytes());
         return packet;
     }

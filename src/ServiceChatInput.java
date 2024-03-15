@@ -110,8 +110,17 @@ public class ServiceChatInput implements IPacketChatOutput{
         }
     }
 
-    private void handleListUserPacket(PacketChat packet) throws PacketChatException{
-        client.getOutput().sendListUser(ServerChatManager.getInstance().getUsers());
+    private void handleListUserPacket() throws PacketChatException{
+        byte[] field;
+        PacketChat packet=new PacketChat();
+        packet.setCommand(PacketChat.LIST_USERS);
+        packet.setFlag(PacketChat.USERSTRUCT_FLAG);
+
+        for (ServiceChat connectedClient:ServerChatManager.getInstance().getClients()){
+            field=UserStructEncoder.getInstance().encode(connectedClient.getUser().getName(),connectedClient.getClientType());
+            packet.addField(field);
+        }
+        client.getOutput().sendPacket(packet);
     }
 
     private void handleFileInitPacket(PacketChat packet) throws PacketChatException{
@@ -206,7 +215,7 @@ public class ServiceChatInput implements IPacketChatOutput{
                 handleMessagePacket(packet);
                 break;
             case PacketChat.LIST_USERS:
-                handleListUserPacket(packet);
+                handleListUserPacket();
                 break;
             case PacketChat.FILE_INIT:
                 handleFileInitPacket(packet);

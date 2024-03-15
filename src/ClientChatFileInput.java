@@ -16,16 +16,23 @@ public class ClientChatFileInput extends LoopWorker {
     }
 
     public String getDescription() {
-        return String.format("ClientChatFileInput - file=%s",filename );
+        return String.format("ClientChatFileInput - file=%s",filename==null?"<error>":filename);
     }
 
     public void setup() throws Exception {
         client=(ClientChat)getArgs()[0];
-        PacketChat fileInit=(PacketChat)getArgs()[1];
-        nounce=fileInit.getParam();
-        sender=new String(fileInit.getField(0));
-        filename=new String(fileInit.getField(1));
+        PacketChat packet=(PacketChat)getArgs()[1];
+        nounce=packet.getParam();
+        sender=new String(packet.getField(0));
+        byte[] filenameBytes=packet.getField(1);
 
+        try{
+            filename=new String(DESEncoder.getInstance().decode(filenameBytes));
+        }catch(Exception e){
+            Logger.w("Cannot decrypt filename");
+            filename=null;
+        }
+        
         output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
         server=new PacketChatOutput(client,client.getUser().getName());
     }
@@ -35,7 +42,7 @@ public class ClientChatFileInput extends LoopWorker {
     }
 
     public void init() throws Exception {
-        if (!filename.contains("/") && !filename.contains("..")
+        if (filename!=null && !filename.contains("/") && !filename.contains("..")
         && !client.getIncomingFiles().isNounceDefined(nounce)
         && sendClientRequest()
         && client.getIncomingFiles().registerNounce(nounce,sender)){

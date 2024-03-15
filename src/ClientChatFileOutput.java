@@ -36,6 +36,8 @@ public class ClientChatFileOutput extends LoopWorker{
 
     public void init() throws Exception {
         Byte testNounce=client.getOutgoingFiles().generateNounce(dest);
+        String sentFilename=new File(filename).getName();
+        byte[] encryptedFilename=null;
 
         if (testNounce==null){
             output.sendFormattedMessage("Cannot get a valid nounce for file \"%s\"",filename);
@@ -43,7 +45,20 @@ public class ClientChatFileOutput extends LoopWorker{
         }
         nounce=testNounce;
 
-        server.sendFileInitRequest(nounce, new File(filename).getName(), dest);
+        if (client.getOutput().getEncryptionStatus()){
+            try{
+                encryptedFilename=DESEncoder.getInstance().encode(sentFilename.getBytes());
+            }catch(Exception e){
+                Logger.w("Cannot encrypt filename");
+            }
+        }
+
+        if (encryptedFilename==null){
+            server.sendFileInitRequest(nounce, sentFilename, dest);
+        }else{
+            server.sendFileEncryptedInitRequest(nounce, encryptedFilename, dest);
+        }
+        
         PacketChat res=client.getBucket().waitPacketAckByNounce(nounce);
 
         if (res.getStatus()==PacketChat.STATUS_ERROR){

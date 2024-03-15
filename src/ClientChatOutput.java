@@ -1,5 +1,9 @@
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.StringTokenizer;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IUserConnection{
@@ -134,13 +138,26 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
     }
 
 
-    private String[] getConnectedUsers() throws PacketChatException{
+    private Collection<SimpleEntry<String,ClientType>> getConnectedUsers() throws PacketChatException{
         putPacketChat(PacketChatFactory.createListUserPacket());
         PacketChat res=client.getBucket().waitPacketByType(PacketChat.LIST_USERS);
 
         byte[][] fields=res.getFields();
-        String[] result=new String[fields.length];
-        for (int i=0;i<fields.length;i++) result[i]=new String(fields[i]);
+        Collection<SimpleEntry<String,ClientType>> result=new ArrayList<SimpleEntry<String,ClientType>>();
+        
+        if (res.getFlag()==PacketChat.USERSTRUCT_FLAG){
+            for (byte[] field:fields){
+                try{
+                    result.add(UserStructEncoder.getInstance().decode(field));
+                }catch(NoSuchFieldException e){
+                    Logger.w("Cannot read user struct: %s", Arrays.toString(field));
+                }
+            }
+        }else{
+            for (byte[] field:fields){
+                result.add(new SimpleEntry<>(new String(field),ClientType.TELNET_CLIENT));
+            }
+        }
         return result;
     }
 
@@ -160,12 +177,11 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
     }
 
     private void listConnectedUsers() throws PacketChatException{
-        String[] connectedUsers=getConnectedUsers();
         StringBuilder builder=new StringBuilder();
 
         builder.append("List of connected users:\n");
-        for (String username:connectedUsers){
-            builder.append(String.format("- %s \n",username));
+        for (SimpleEntry<String,ClientType> user:getConnectedUsers()){
+            builder.append(String.format("- name=\"%s\" - client=%s\n",user.getKey(),user.getValue().name()));
         }
         output.sendMessage(builder.toString());
     }
@@ -208,9 +224,9 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
 
     private void sendFileToAll(String filename) throws PacketChatException{
         if (checkFile(filename)){
-            for (String user:getConnectedUsers()){
-                if (!user.equals(client.getUser().getName())){
-                    new ClientChatFileOutput(client, filename, user);
+            for (SimpleEntry<String,ClientType> user:getConnectedUsers()){
+                if (!user.getKey().equals(client.getUser().getName())){
+                    new ClientChatFileOutput(client, filename, user.getKey());
                 }
             }
         }else{
