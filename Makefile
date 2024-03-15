@@ -11,6 +11,7 @@
 	RMRF=rmdir /s /q
 
 	BOUNCY_CASTLE=.\lib\bcprov-jdk18on-177.jar
+	SEPARATOR=;
 else
 	JAVAC = javac
 	JAR= jar
@@ -20,6 +21,7 @@ else
 	RMRF=rm -rf
 
 	BOUNCY_CASTLE=lib/bcprov-jdk18on-177.jar
+	SEPARATOR=:
 endif
 
 
@@ -55,7 +57,7 @@ all: $(OBJ_DIRS) $(OBJ)
 
 $(OBJ_DIRS) $(OUT_DIR):
 	@echo "Creating folder $@..."
-	$(MKDIR) ${@:/=}
+	@$(MKDIR) ${@:/=}
 
 
 $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
@@ -82,10 +84,10 @@ runjar: $(OUT)
 	@$(JAVA) -jar $(OUT_DIR)/$(JARFILE)
 
 server: $(OBJ)
-	@$(JAVA) -cp "$(BUILD_DIR);$(BOUNCY_CASTLE)" Main serve 2000 2001:ADMIN
+	@$(JAVA) -cp "$(BUILD_DIR)$(SEPARATOR)$(BOUNCY_CASTLE)" Main serve 2000 2001:ADMIN
 
 generator: $(OBJ)
-	@$(JAVA) -cp "$(BUILD_DIR);$(BOUNCY_CASTLE)" Main generate $(USER)
+	@$(JAVA) -cp "$(BUILD_DIR)$(SEPARATOR)$(BOUNCY_CASTLE)" Main generate $(USER)
 
 client: $(OBJ)
-	@$(JAVA) -cp "$(BUILD_DIR);$(BOUNCY_CASTLE)" Main connect 2000
+	@$(JAVA) -cp "$(BUILD_DIR)$(SEPARATOR)$(BOUNCY_CASTLE)" Main connect 2000
