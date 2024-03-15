@@ -110,16 +110,20 @@ public class ServiceChatInput implements IPacketChatOutput{
         }
     }
 
-    private void handleListUserPacket() throws PacketChatException{
+    private void handleListUserPacket(PacketChat packet) throws PacketChatException{
         byte[] field;
-        PacketChat packet=new PacketChat();
-        packet.setCommand(PacketChat.LIST_USERS);
-        packet.setFlag(PacketChat.USERSTRUCT_FLAG);
 
-        for (ServiceChat connectedClient:ServerChatManager.getInstance().getClients()){
-            field=UserStructEncoder.getInstance().encode(connectedClient.getUser().getName(),connectedClient.getClientType());
-            packet.addField(field);
+        if (packet.isFlagSet(PacketChat.LEGACY_USERLIST_FLAG)){
+            for (String user:ServerChatManager.getInstance().getUsers()){
+                packet.addField(user.getBytes());
+            }
+        }else{
+            for (ServiceChat connectedClient:ServerChatManager.getInstance().getClients()){
+                field=UserStructEncoder.getInstance().encode(connectedClient.getUser().getName(),connectedClient.getClientType());
+                packet.addField(field);
+            }
         }
+        
         client.getOutput().sendPacket(packet);
     }
 
@@ -202,7 +206,11 @@ public class ServiceChatInput implements IPacketChatOutput{
 
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
-        Logger.i("got packet: %s",packet);
+        if (client.getUser()==null){
+            Logger.i("got packet from %s: %s",client.getDescription(),packet);
+        }else{
+            Logger.i("got packet from user \"%s\": %s",user.getName(), packet);
+        }
 
         switch(packet.getCommand()){
             case PacketChat.AUTH:
@@ -215,7 +223,7 @@ public class ServiceChatInput implements IPacketChatOutput{
                 handleMessagePacket(packet);
                 break;
             case PacketChat.LIST_USERS:
-                handleListUserPacket();
+                handleListUserPacket(packet);
                 break;
             case PacketChat.FILE_INIT:
                 handleFileInitPacket(packet);

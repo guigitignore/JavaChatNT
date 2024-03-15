@@ -71,12 +71,17 @@ public class ServiceChatOutput  extends LoopWorker implements IPacketChatOutput{
         //send packet 
         if (packet==null){
             if (client.getUser()==null){
-                Logger.i("drop packet in output for %s: %s",client.getDescription(),packetCopy.toString());
+                Logger.i("drop packet in output for %s: %s",client.getDescription(),packetCopy);
             }else{
-                Logger.i("drop packet in output for user \"%s\": %s",client.getUser().getName(),packetCopy.toString());
+                Logger.i("drop packet in output for user \"%s\": %s",client.getUser().getName(),packetCopy);
             }
         }else{
-            Logger.i("send packet: %s",packet);
+            if (client.getUser()==null){
+                Logger.i("send packet for %s: %s",client.getDescription(),packet);
+            }else{
+                Logger.i("send packet for user \"%s\": %s",client.getUser().getName(),packet);
+            }
+            
             client.putPacketChat(packet);
         }
     }

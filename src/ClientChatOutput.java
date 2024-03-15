@@ -145,17 +145,17 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         byte[][] fields=res.getFields();
         Collection<SimpleEntry<String,ClientType>> result=new ArrayList<SimpleEntry<String,ClientType>>();
         
-        if (res.getFlag()==PacketChat.USERSTRUCT_FLAG){
+        if (res.isFlagSet(PacketChat.LEGACY_USERLIST_FLAG)){
+            for (byte[] field:fields){
+                result.add(new SimpleEntry<>(new String(field),ClientType.TELNET_CLIENT));
+            }
+        }else{
             for (byte[] field:fields){
                 try{
                     result.add(UserStructEncoder.getInstance().decode(field));
                 }catch(NoSuchFieldException e){
                     Logger.w("Cannot read user struct: %s", Arrays.toString(field));
                 }
-            }
-        }else{
-            for (byte[] field:fields){
-                result.add(new SimpleEntry<>(new String(field),ClientType.TELNET_CLIENT));
             }
         }
         return result;
@@ -205,44 +205,43 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         StringTokenizer tokens=new StringTokenizer(args," ");
         String filename;
         String dest;
+        int fileSize;
 
         if (tokens.countTokens()<2){
             output.sendMessage("this command expects at least 2 arguments");
         }else{
             filename=tokens.nextToken();
-
-            if (checkFile(filename)){
+            fileSize=checkFile(filename);
+            if (fileSize>0){
                 do{
                     dest=tokens.nextToken();
-                    new ClientChatFileOutput(client, filename, dest);
+                    new ClientChatFileOutput(client, filename,fileSize, dest);
                 }while(tokens.hasMoreTokens());
-            }else{
-                output.sendFormattedMessage("the file \"%s\" does not exists",filename);
             }
         }
     }
 
     private void sendFileToAll(String filename) throws PacketChatException{
-        if (checkFile(filename)){
+        int fileSize=checkFile(filename);
+        if (fileSize>0){
             for (SimpleEntry<String,ClientType> user:getConnectedUsers()){
                 if (!user.getKey().equals(client.getUser().getName())){
-                    new ClientChatFileOutput(client, filename, user.getKey());
+                    new ClientChatFileOutput(client, filename,fileSize, user.getKey());
                 }
             }
-        }else{
-            output.sendFormattedMessage("the file \"%s\" does not exists",filename);
         }
     }
 
-    private boolean checkFile(String filename) throws PacketChatException{
-        boolean result=false;
+    //return file size or -1 in case of error
+    private int checkFile(String filename) throws PacketChatException{
+        int result=-1;
 
         File file=new File(filename);
         if (file.exists()){
             if (!file.isFile()){
                 output.sendFormattedMessage("File \"%s\" is not a file", filename);
             }else{
-                result=true;
+                result=(int)file.length();
             }
         }else{
             output.sendFormattedMessage("File \"%s\" does not exists", filename);

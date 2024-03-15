@@ -20,9 +20,9 @@ public class PacketChat {
 
     public final static byte STATUS_SUCCESS=      (byte)0x00;
     public final static byte STATUS_ERROR=        (byte)0x01;
-    public final static byte ENCRYPTION_FLAG=     (byte)0b10000000;
 
-    public final static byte USERSTRUCT_FLAG=     (byte)0b01000000;
+    public final static byte ENCRYPTION_FLAG=     (byte)0b10000000;
+    public final static byte LEGACY_USERLIST_FLAG=(byte)0b01000000;
 
     private final static int HEADER_SIZE=8;
     private final static int MAX_DATA_SIZE=0x100000;
@@ -151,7 +151,11 @@ public class PacketChat {
 
     public byte getFlag(){
         return flag;
-    } 
+    }
+    
+    public boolean isFlagSet(byte flag){
+        return (this.flag & flag)!=0;
+    }
 
     public void setParam(byte param){
         this.param=param;

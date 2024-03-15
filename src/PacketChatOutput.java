@@ -69,12 +69,12 @@ public class PacketChatOutput {
         sendPacket(PacketChatFactory.createFileInitStatusPacket(nounce,false));
     }
 
-    public void sendFileInitRequest(byte nounce,String filename,String dest) throws PacketChatException{
-        sendPacket(PacketChatFactory.createFileInitPacket(false,nounce, sender,filename.getBytes(), dest));
+    public void sendFileInitRequest(byte nounce,String filename,int fileSize,String dest) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileInitPacket(false,nounce, sender,filename.getBytes(),fileSize, dest));
     }
 
-    public void sendFileEncryptedInitRequest(byte nounce,byte[] filename,String dest) throws PacketChatException{
-        sendPacket(PacketChatFactory.createFileInitPacket(true,nounce, sender,filename, dest));
+    public void sendFileEncryptedInitRequest(byte nounce,byte[] filename,int fileSize,String dest) throws PacketChatException{
+        sendPacket(PacketChatFactory.createFileInitPacket(true,nounce, sender,filename,fileSize, dest));
     }
 
     public void sendFileDataRequest(byte nounce,byte[] data,String dest) throws PacketChatException{

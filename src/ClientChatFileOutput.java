@@ -6,6 +6,7 @@ import org.bouncycastle.util.Arrays;
 
 public class ClientChatFileOutput extends LoopWorker{
     private String filename;
+    private int fileSize;
     private String dest;
     private ClientChat client;
     private byte nounce;
@@ -16,8 +17,8 @@ public class ClientChatFileOutput extends LoopWorker{
 
     public final static int CHUNK_SIZE=512;
 
-    public ClientChatFileOutput(ClientChat client,String filename,String dest){
-        super(client,filename,dest);
+    public ClientChatFileOutput(ClientChat client,String filename,int fileSize,String dest){
+        super(client,filename,fileSize,dest);
     }
 
     public String getDescription() {
@@ -27,36 +28,45 @@ public class ClientChatFileOutput extends LoopWorker{
     public void setup() throws Exception {
         client=(ClientChat)getArgs()[0];
         filename=(String)getArgs()[1];
-        dest=(String)getArgs()[2];
-        chunk=new byte[CHUNK_SIZE];
+        fileSize=(int)getArgs()[2];
+        dest=(String)getArgs()[3];
+        
+
+        try{
+            fileInputStream=new FileInputStream(filename);
+        }catch(IOException e){
+            output.sendFormattedMessage("Cannot open file \"%s\"",filename);
+            throw e;
+        }
+        filename=new File(filename).getName();
+
+        Byte testNounce=client.getOutgoingFiles().generateNounce(dest);
+        if (testNounce==null){
+            output.sendFormattedMessage("Cannot get a valid nounce for file \"%s\"",filename);
+            throw new InterruptedException();
+        }
+        nounce=testNounce;        
 
         output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
         server=new PacketChatOutput(client,client.getUser().getName());
     }
 
     public void init() throws Exception {
-        Byte testNounce=client.getOutgoingFiles().generateNounce(dest);
-        String sentFilename=new File(filename).getName();
+        //get base name from path
         byte[] encryptedFilename=null;
-
-        if (testNounce==null){
-            output.sendFormattedMessage("Cannot get a valid nounce for file \"%s\"",filename);
-            throw new InterruptedException();
-        }
-        nounce=testNounce;
 
         if (client.getOutput().getEncryptionStatus()){
             try{
-                encryptedFilename=DESEncoder.getInstance().encode(sentFilename.getBytes());
+                encryptedFilename=DESEncoder.getInstance().encode(filename.getBytes());
             }catch(Exception e){
                 Logger.w("Cannot encrypt filename");
             }
         }
 
         if (encryptedFilename==null){
-            server.sendFileInitRequest(nounce, sentFilename, dest);
+            server.sendFileInitRequest(nounce, filename,fileSize, dest);
         }else{
-            server.sendFileEncryptedInitRequest(nounce, encryptedFilename, dest);
+            server.sendFileEncryptedInitRequest(nounce, encryptedFilename,fileSize, dest);
         }
         
         PacketChat res=client.getBucket().waitPacketAckByNounce(nounce);
@@ -66,15 +76,7 @@ public class ClientChatFileOutput extends LoopWorker{
             throw new InterruptedException();
         }
 
-
-        try{
-            fileInputStream=new FileInputStream(filename);
-        }catch(IOException e){
-            output.sendFormattedMessage("Cannot open file \"%s\"",filename);
-            server.sendFileOverRequest(nounce, dest);
-            client.getBucket().waitPacketAckByNounce(nounce);
-            throw e;
-        }
+        chunk=new byte[CHUNK_SIZE];
         
     }
 

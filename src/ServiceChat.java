@@ -106,9 +106,9 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
                 inputServiceChat.putPacketChat(packet);
             }catch(PacketChatException e){
                 if (getUser()==null){
-                    Logger.w("Packet dropped on input for %s: %s",getDescription(),e.getMessage());
+                    Logger.w("Packet dropped on input from %s: %s",getDescription(),e.getMessage());
                 }else{
-                    Logger.w("Packet dropped on input for user \"%s\" : %s",getUser().getName(),e.getMessage());
+                    Logger.w("Packet dropped on input from user \"%s\" : %s",getUser().getName(),e.getMessage());
                 }
             }
         }

@@ -11,7 +11,7 @@ public class ClientChatRequest {
         output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
     }
 
-    public boolean sendConfirmationRequest(String message) throws InterruptedException{
+    public boolean sendConfirmationRequest(String format,Object...args) throws InterruptedException{
         int confirmationId=confirmationCounter.incrementAndGet();
         AtomicBoolean request=new AtomicBoolean(false);
 
@@ -20,7 +20,7 @@ public class ClientChatRequest {
         }
         
         StringBuilder builder=new StringBuilder();
-        builder.append(message);
+        builder.append(String.format(format, args));
         builder.append(String.format("\n\"/allow %d\" to accept",confirmationId));
         builder.append(String.format("\n\"/deny %d\" to reject",confirmationId));
 

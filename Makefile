@@ -14,6 +14,7 @@ OUT_DIR=out
 
 SRC_DIR=src
 BUILD_DIR = build
+LOG_DIR= logs
 BOUNCY_CASTLE=lib/bcprov-jdk18on-177.jar
 
 # Recursive Wildcard function
@@ -50,8 +51,12 @@ $(OUT): $(OBJ) $(OUT_DIR)
 	@cp $(BOUNCY_CASTLE) $(OUT_DIR)
 
 clean:
-	@echo "Cleaning Build"
+	@echo "Cleaning build"
 	@rm -rf $(BUILD_DIR) $(OUT_DIR)
+
+cleanlogs:
+	@echo "Removing logs..."
+	@rm -rf $(LOG_DIR)
 
 jar: $(OUT)
 
@@ -60,10 +65,10 @@ runjar: $(OUT)
 	@$(JAVA) -jar $(OUT_DIR)/$(JARFILE)
 
 server: $(OBJ)
-	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main serve
+	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main serve 2000 2001:ADMIN
 
 generator: $(OBJ)
 	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main generate $(USER)
 
 client: $(OBJ)
-	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main connect
+	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main connect 2000

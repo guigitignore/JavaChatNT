@@ -1,9 +1,11 @@
 import java.security.Security;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
+import java.util.AbstractMap.SimpleEntry;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 class Main{
-    public final static int DEFAULT_SERVER_PORT=2000;
     public static void main(String[] args) {
         if (args.length<1){
             System.err.println("You must specify the mode in argument: server,connect,generate");
@@ -19,13 +21,13 @@ class Main{
         //switch mode
         switch(mode){
             case "serve":
-                server(modeArgs);
+                serverMode(modeArgs);
                 break;
             case "generate":
-                generator(modeArgs);
+                generatorMode(modeArgs);
                 break;
             case "connect":
-                client(modeArgs);
+                clientMode(modeArgs);
                 break;
             default:
                 System.err.printf("Unknown mode \"%s\"\n",mode);
@@ -43,18 +45,46 @@ class Main{
         }));
     }
 
-    public static void server(String... args){
-        
-        if (!Logger.addOutput("server")) Logger.e("Cannot write server logs in file");
-        Logger.i("Starting engine...");
-        new ServerChat(1234,User.USER_TAG);
-        //new ServerChat(DEFAULT_SERVER_PORT+1,User.ADMIN_TAG);
+    public static void serverMode(String... args){
+        ArrayList<SimpleEntry<Integer,String[]>> servers=new ArrayList<>();
 
+        for (String arg:args){
+            if (arg.isEmpty()) continue;
+            StringTokenizer tokens=new StringTokenizer(arg,":");
+
+            try{
+                int port=Integer.parseInt(tokens.nextToken());
+                if (port<=0) throw new NumberFormatException();
+
+                if (tokens.hasMoreTokens()){
+                    String[] userTypes=tokens.nextToken("").split(",");
+                    servers.add(new SimpleEntry<Integer,String[]>(port,userTypes));
+                }else{
+                    servers.add(new SimpleEntry<Integer,String[]>(port,new String[]{User.USER_TAG}));
+                }
+            }catch(NumberFormatException e){
+                Logger.w("Invalid port number in argument: \"%s\"",arg);
+                continue;
+            } 
+        }
+
+        if (servers.size()>0){
+            if (!Logger.addOutput("server")) Logger.e("Cannot write server logs in file");
+            Logger.i("Starting engine...");
+
+            for (SimpleEntry<Integer,String[]> server:servers){
+                new ServerChat(server.getKey(),server.getValue());
+            }
+            
+        }else{
+            Logger.e("Nothing to do");
+            System.exit(-1);
+        }
     }
 
-    public static void generator(String...args){
+    public static void generatorMode(String...args){
         if (args.length==0){
-            System.err.println("Expected username as argument");
+            Logger.e("Expected username as argument");
             System.exit(-1);
         }
 
@@ -68,20 +98,24 @@ class Main{
                 Logger.e("An error occured suring generation process for user %s: %s",username,e.getMessage());
             }
         }
+        System.exit(0);
     }
 
-    public static void client(String...args){
-        String host;
-        int port;
+    public static void clientMode(String...args){
+        String host=null;
+        int port=0;
 
         try{
-            if (args.length<2){
+            if (args.length==1){
                 host="localhost";
-                port=(args.length<1)?DEFAULT_SERVER_PORT:Integer.parseInt(args[0]);
-            }else{
+                port=Integer.parseInt(args[0]);
+            }else if (args.length>=2){
                 host=args[0];
                 port=Integer.parseInt(args[1]);
+            }else{
+                throw new NoSuchFieldException();
             }
+
             if (port<=0) throw new NumberFormatException("port must be greater than 0");
 
             if (Logger.addOutput("client")){
@@ -98,6 +132,9 @@ class Main{
             }
         }catch(NumberFormatException e){
             Logger.e("Invalid port number!");
+            System.exit(-1);
+        }catch(NoSuchFieldException e){
+            Logger.e("Expecting at least one argument");
             System.exit(-1);
         }
             

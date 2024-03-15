@@ -27,7 +27,7 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
-        Logger.i("got packet in input %s",packet.toString());
+        Logger.i("got packet: %s",packet);
         try{
             sanitizer.client(packet);
         }catch(PacketChatException e){
@@ -73,7 +73,7 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
 
         switch(packet.getCommand()){
             case PacketChat.FILE_INIT:
-                if (packet.getFieldsNumber()==3) new ClientChatFileInput(client, packet);
+                if (packet.getFieldsNumber()>0) new ClientChatFileInput(client, packet);
                 packet=null;
                 break;
             case PacketChat.SEND_MSG:
@@ -115,6 +115,7 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
             case PacketChat.AUTH:
                 if (packet.getStatus()==PacketChat.STATUS_SUCCESS){
                     isConnected.set(true);
+                    Logger.i("Connection success for user \"%s\"",client.getUser().getName());
                     client.getOutput().putPacketChat(PacketChatFactory.createMessagePacket("","/listusers"));
                 }
                 break;

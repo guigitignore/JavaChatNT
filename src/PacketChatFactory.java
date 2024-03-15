@@ -1,3 +1,4 @@
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -68,14 +69,14 @@ public class PacketChatFactory{
         return packet;
     }
 
-    public static PacketChat createFileInitPacket(boolean encrypted,byte nounce,String sender,byte[] filename,String dest){
+    public static PacketChat createFileInitPacket(boolean encrypted,byte nounce,String sender,byte[] filename,int filesize,String dest){
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.FILE_INIT);
         if (encrypted) packet.setFlag(PacketChat.ENCRYPTION_FLAG);
         packet.addField(sender.getBytes());
         packet.addField(filename);
-        packet.addField(new byte[]{(byte)0x0,(byte)0x2,(byte)0x3,(byte)0x4});
+        packet.addField(ByteBuffer.allocate(Integer.BYTES).putInt(filesize).array());
         packet.addField(dest.getBytes());
         return packet;
     }
