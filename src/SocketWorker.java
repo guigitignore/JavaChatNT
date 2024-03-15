@@ -24,6 +24,7 @@ public abstract class SocketWorker extends Thread implements IWorker{
     }
 
     public void cancel() {
+        System.out.println("cancel method called "+getDescription());
         synchronized(socket){
             if (!socket.isClosed()){
                 try{

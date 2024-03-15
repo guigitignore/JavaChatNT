@@ -3,9 +3,9 @@
 #commands
 	ifeq ($(OS),Windows_NT)
 	JAVADIR=C:\Program Files (x86)\Java\jdk1.8.0_202\bin
-	JAVAC="$(JAVADIR)\javac"
-	JAR="$(JAVADIR)\jar"
-	JAVA="$(JAVADIR)\java"
+	JAVAC='$(JAVADIR)\javac'
+	JAR='$(JAVADIR)\jar'
+	JAVA='$(JAVADIR)\java'
 
 	MKDIR=md
 	RMRF=rmdir /s /q
@@ -29,8 +29,8 @@ MANIFEST= META-INF/MANIFEST.MF
 JARFILE = main.jar
 OUT_DIR=out
 
-SRC_DIR=src
 BUILD_DIR = build
+SRC_DIR=src
 LOG_DIR= logs
 
 
@@ -82,10 +82,10 @@ runjar: $(OUT)
 	@$(JAVA) -jar $(OUT_DIR)/$(JARFILE)
 
 server: $(OBJ)
-	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main serve 2000 2001:ADMIN
+	@$(JAVA) -cp "$(BUILD_DIR);$(BOUNCY_CASTLE)" Main serve 2000 2001:ADMIN
 
 generator: $(OBJ)
-	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main generate $(USER)
+	@$(JAVA) -cp "$(BUILD_DIR);$(BOUNCY_CASTLE)" Main generate $(USER)
 
 client: $(OBJ)
-	@$(JAVA) -cp $(BUILD_DIR):$(BOUNCY_CASTLE) Main connect 2000
+	@$(JAVA) -cp "$(BUILD_DIR);$(BOUNCY_CASTLE)" Main connect 2000

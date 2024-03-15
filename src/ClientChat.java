@@ -82,11 +82,15 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     private void initStreams() throws IOException{
+        InputStream stdin;
+
         skipWelcomeMessage();
         sendHelloPacket();
 
         packetInterface=new PacketChatRawInterface(getSocket().getInputStream(),getSocket().getOutputStream());
-        messageInterface=new PacketChatTelnetInterface(new InterruptibleInputStream(),System.out);
+
+        stdin=System.getProperty("java.version").startsWith("1.")?System.in:new InterruptibleInputStream();
+        messageInterface=new PacketChatTelnetInterface(stdin,System.out);
         bucket=new PacketChatBucket(BUCKET_CAPACITY);
         incomingFiles=new NounceManager();
         outgoingFiles=new NounceManager();

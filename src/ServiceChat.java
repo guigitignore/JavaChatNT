@@ -99,6 +99,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
             try{
                 packet=getPacketChat();
             }catch(PacketChatException e){
+                e.printStackTrace();
                 break;
             }
             try{
