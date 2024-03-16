@@ -1,5 +1,16 @@
 # This makefile allows to compile automatically java files and produce a jar
 
+MANIFEST= META-INF/MANIFEST.MF
+
+# Main target and filename of the executable
+JARFILE = main.jar
+OUT_DIR=out
+
+BUILD_DIR = build
+SRC_DIR=src
+LOG_DIR= logs
+LIB_DIR=lib
+
 #commands
 	ifeq ($(OS),Windows_NT)
 	JAVADIR=C:\Program Files (x86)\Java\jdk1.8.0_202\bin
@@ -10,8 +21,8 @@
 	MKDIR=md
 	RMRF=rmdir /s /q
 
-	BOUNCY_CASTLE=.\lib\bcprov-jdk18on-177.jar
-	SEPARATOR=;
+	CLASSES_PATH=$(LIB_DIR)\bcprov-jdk18on-177.jar;$(LIB_DIR)\base-core.jar;$(LIB_DIR)\base-opt.jar
+	RUNTIME_CLASSES_PATH=$(BUILD_DIR);$(CLASSES_PATH);$(LIB_DIR)\apduio.jar;$(LIB_DIR)\apduio-terminal-0.1.jar;$(LIB_DIR)\pcsc-wrapper-2.0.jar
 else
 	JAVAC = javac
 	JAR= jar
@@ -20,20 +31,9 @@ else
 	MKDIR=mkdir -p
 	RMRF=rm -rf
 
-	BOUNCY_CASTLE=lib/bcprov-jdk18on-177.jar
-	SEPARATOR=:
+	CLASSES_PATH=$(LIB_DIR)/bcprov-jdk18on-177.jar:$(LIB_DIR)\base-core.jar:$(LIB_DIR)\base-opt.jar
+	RUNTIME_CLASSES_PATH=$(BUILD_DIR):$(CLASSES_PATH)
 endif
-
-
-MANIFEST= META-INF/MANIFEST.MF
-
-# Main target and filename of the executable
-JARFILE = main.jar
-OUT_DIR=out
-
-BUILD_DIR = build
-SRC_DIR=src
-LOG_DIR= logs
 
 
 # Recursive Wildcard function
@@ -62,12 +62,12 @@ $(OBJ_DIRS) $(OUT_DIR):
 
 $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
 	@echo "Compiling $<..."
-	@$(JAVAC) -cp $(BOUNCY_CASTLE) $< -d $(BUILD_DIR) -sourcepath $(SRC_DIR)
+	@$(JAVAC) -cp "$(CLASSES_PATH)" $< -d $(BUILD_DIR) -sourcepath $(SRC_DIR)
 
 $(OUT): $(OBJ) $(OUT_DIR)
 	@echo "Creating jar $@..."
 	@cd $(BUILD_DIR) && $(JAR) cvfm ../$(OUT) ../$(MANIFEST) *.class
-	@cp $(BOUNCY_CASTLE) $(OUT_DIR)
+	@cp $(LIB_DIR)/*.jar $(OUT_DIR)
 
 clean:
 	@echo "Cleaning build"
@@ -79,15 +79,11 @@ cleanlogs:
 
 jar: $(OUT)
 
-runjar: $(OUT)
-	@echo "Running $(OUT)..."
-	@$(JAVA) -jar $(OUT_DIR)/$(JARFILE)
-
 server: $(OBJ)
-	@$(JAVA) -cp "$(BUILD_DIR)$(SEPARATOR)$(BOUNCY_CASTLE)" Main serve 2000 2001:ADMIN
+	@$(JAVA) -cp "$(RUNTIME_CLASSES_PATH)" Main serve 2000 2001:ADMIN
 
 generator: $(OBJ)
-	@$(JAVA) -cp "$(BUILD_DIR)$(SEPARATOR)$(BOUNCY_CASTLE)" Main generate $(USER)
+	@$(JAVA) -cp "$(RUNTIME_CLASSES_PATH)" Main generate $(USER)
 
 client: $(OBJ)
-	@$(JAVA) -cp "$(BUILD_DIR)$(SEPARATOR)$(BOUNCY_CASTLE)" Main connect 2000
+	@$(JAVA) -cp "$(RUNTIME_CLASSES_PATH)" Main connect 2000
