@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 
@@ -47,39 +49,40 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
         return outgoingFiles;
     }
 
-    private int readInputStreamByte() throws IOException{
-        int result=getSocket().getInputStream().read();
+    private int readInputStreamByte(InputStream in) throws IOException{
+        int result=in.read();
         if (result==-1) throw new IOException("end of stream");
         return result;
     }
 
-    private ClientType identifyClientType() throws IOException{
+    private ClientType identifyClientType(InputStream in,OutputStream out) throws IOException{
         ClientType clientType;
 
-        getSocket().getOutputStream().write("Welcome to JavaChatNT. Press [enter] to continue...".getBytes());
-        int identifierByte=readInputStreamByte();
+        out.write("Welcome to JavaChatNT. Press [enter] to continue...".getBytes());
+        int identifierByte=readInputStreamByte(in);
 
         if (identifierByte==0xFF){
             clientType=ClientType.PACKETCHAT_CLIENT;
             //read the remaining bytes of hello packet to make sure alignment is correct.
-            for (int i=0;i<7;i++) readInputStreamByte();
+            for (int i=0;i<7;i++) readInputStreamByte(in);
         }else{
             clientType=ClientType.TELNET_CLIENT;
-            while (identifierByte!=LINE_FEED) identifierByte=readInputStreamByte();
+            while (identifierByte!=LINE_FEED) identifierByte=readInputStreamByte(in);
         }
-
         return clientType;
     }
 
     private void setupClientInterface() throws IOException{
-        clientType=identifyClientType();
+        InputStream in=getSocket().getInputStream();
+        OutputStream out=getSocket().getOutputStream();
+        clientType=identifyClientType(in,out);
             
         switch (clientType) {
             case PACKETCHAT_CLIENT:
-                packetChatInterface=new PacketChatRawInterface(getSocket().getInputStream(),getSocket().getOutputStream());
+                packetChatInterface=new PacketChatRawInterface(in,out);
                 break;
             case TELNET_CLIENT:
-                packetChatInterface=new PacketChatTelnetInterface(getSocket().getInputStream(),new PrintStream(getSocket().getOutputStream()));
+                packetChatInterface=new PacketChatTelnetInterface(in,new PrintStream(out));
                 break;
             default:
                 throw new IOException("Unhandled client type");
@@ -99,7 +102,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
             try{
                 packet=getPacketChat();
             }catch(PacketChatException e){
-                e.printStackTrace();
+                //e.printStackTrace();
                 break;
             }
             try{

@@ -54,6 +54,7 @@ public class PacketChat {
             setParam(header.get());
             
             int dataSize=header.getInt();
+            Logger.i("Data section size=%d",dataSize);
             if (dataSize>MAX_DATA_SIZE) throw new PacketChatException("Data section is too big");
     
             dataBytes=new byte[dataSize];

@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 public class ClientChat extends SocketWorker implements IPacketChatInterface,IUserConnection{
@@ -68,14 +69,22 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         return outgoingFiles;
     }
 
-    private void skipWelcomeMessage() throws IOException{
-        InputStream inputStream=getSocket().getInputStream();
-        inputStream.skip(inputStream.available());
+    private void skipWelcomeMessage(InputStream in) throws IOException{
+        int available;
+        do{
+            available=in.available();
+            try{
+                Thread.sleep(10);
+            }catch(InterruptedException e){
+                throw new IOException(e.getMessage());
+            }
+        }while(available==0);
+        in.skip(available);
     }
 
-    private void sendHelloPacket() throws IOException{
+    private void sendHelloPacket(OutputStream out) throws IOException{
         try{
-            PacketChatFactory.createHelloPacket().send(getSocket().getOutputStream());
+            PacketChatFactory.createHelloPacket().send(out);
         }catch(PacketChatException e){
             throw new IOException(e.getMessage());
         }
@@ -83,11 +92,13 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
     private void initStreams() throws IOException{
         InputStream stdin;
+        InputStream in=getSocket().getInputStream();
+        OutputStream out=getSocket().getOutputStream();
 
-        skipWelcomeMessage();
-        sendHelloPacket();
+        skipWelcomeMessage(in);
+        sendHelloPacket(out);
 
-        packetInterface=new PacketChatRawInterface(getSocket().getInputStream(),getSocket().getOutputStream());
+        packetInterface=new PacketChatRawInterface(in,out);
 
         stdin=System.getProperty("java.version").startsWith("1.")?System.in:new InterruptibleInputStream();
         messageInterface=new PacketChatTelnetInterface(stdin,System.out);
