@@ -70,16 +70,18 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     private void skipWelcomeMessage(InputStream in) throws IOException{
-        int available;
-        do{
-            available=in.available();
+        while(true){
+            int available=in.available();
+            if (available>0){
+                in.skip(available);
+                break;
+            }
             try{
                 Thread.sleep(10);
             }catch(InterruptedException e){
                 throw new IOException(e.getMessage());
             }
-        }while(available==0);
-        in.skip(available);
+        }
     }
 
     private void sendHelloPacket(OutputStream out) throws IOException{
@@ -91,17 +93,16 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     private void initStreams() throws IOException{
-        InputStream stdin;
         InputStream in=getSocket().getInputStream();
         OutputStream out=getSocket().getOutputStream();
+        InputStream stdin=System.getProperty("java.version").startsWith("1.")?System.in:new InterruptibleInputStream();
 
         skipWelcomeMessage(in);
         sendHelloPacket(out);
 
         packetInterface=new PacketChatRawInterface(in,out);
-
-        stdin=System.getProperty("java.version").startsWith("1.")?System.in:new InterruptibleInputStream();
         messageInterface=new PacketChatTelnetInterface(stdin,System.out);
+
         bucket=new PacketChatBucket(BUCKET_CAPACITY);
         incomingFiles=new NounceManager();
         outgoingFiles=new NounceManager();
@@ -125,13 +126,11 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
                 bucket.putPacketChat(packet);
             }catch(PacketChatException e){
                 Logger.w("Cannot put packet in bucket: %s",e.getMessage());
-            }
-            
+            }         
         }
     }
 
     public void run(){
-
         try{
             initStreams();
             mainloop();
@@ -141,9 +140,5 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
         WorkerManager.getInstance().cancelAll();
         WorkerManager.getInstance().remove(this);
-        
     }
-
-    
-    
 }
