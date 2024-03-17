@@ -31,7 +31,7 @@ else
 	MKDIR=mkdir -p
 	RMRF=rm -rf
 
-	CLASSES_PATH=$(LIB_DIR)/bcprov-jdk18on-177.jar:$(LIB_DIR)\base-core.jar:$(LIB_DIR)\base-opt.jar
+	CLASSES_PATH=$(LIB_DIR)/bcprov-jdk18on-177.jar:$(LIB_DIR)/base-core.jar:$(LIB_DIR)/base-opt.jar
 	RUNTIME_CLASSES_PATH=$(BUILD_DIR):$(CLASSES_PATH)
 endif
 
