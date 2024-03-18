@@ -46,7 +46,6 @@ OBJ := $(patsubst $(SRC_DIR)/%.java,$(BUILD_DIR)/%.class,$(SRC))
 JAR_LIB := $(call rwildcard,$(LIB_DIR),*.jar)
 # List of jar file in out folder
 JAR_OUT := $(patsubst $(LIB_DIR)/%.jar,$(OUT_DIR)/%.jar,$(JAR_LIB))
-JAR_CLASS_PATHS := $(patsubst $(LIB_DIR)/%.jar,%.jar,$(JAR_LIB))
 
 noop=
 space = $(noop) $(noop)
@@ -79,7 +78,6 @@ $(MANIFEST): $(MANIFEST_DIR)
 	@echo Generating manifest...
 	@echo Manifest-Version: 1.0 >> $(MANIFEST)
 	@echo Main-Class: $(MAIN_CLASS) >> $(MANIFEST)
-	@echo Class-Path: $(JAR_CLASS_PATHS) >> $(MANIFEST)
 
 clean:
 	@echo Cleaning build...

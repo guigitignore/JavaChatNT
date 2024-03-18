@@ -12,7 +12,7 @@ import util.Logger;
 
 
 public class ServerChatManager {
-    public final static String DATABASE_FILE="users.txt";
+    public final static String DATABASE_FILE="db/users.txt";
 
     private final static ServerChatManager instance=new ServerChatManager();
 

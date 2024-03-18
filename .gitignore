@@ -3,8 +3,11 @@ out
 META-INF
 logs
 downloads
+db
+keys
+tests
+.VSCodeCounter
 **/*.txt
 **/*.pub
 **/*.priv
 **/*.log
-.VSCodeCounter

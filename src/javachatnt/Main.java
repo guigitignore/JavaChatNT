@@ -101,7 +101,7 @@ class Main{
             try{
                 RSAKeyPair keyPair=new RSAKeyPair();
                 Logger.i("Sucessfully generate RSA keypair");
-                keyPair.exportKeyPair(username);
+                keyPair.exportKeyPair("keys/"+username);
                 Logger.i("Sucessfully export keypair");  
             }catch(Exception e){
                 Logger.e("An error occured suring generation process for user %s: %s",username,e.getMessage());
@@ -136,6 +136,7 @@ class Main{
             try{
                 new ClientChat(host, port);
             }catch(Exception e){
+                Logger.addSTDOUT();
                 Logger.e("client error: %s",e.getMessage());
                 System.exit(-1);
             }

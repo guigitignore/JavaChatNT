@@ -77,4 +77,8 @@ public class Logger {
     public static void removeSTDOUT(){
         removeOutput(System.out);
     }
+
+    public static void addSTDOUT(){
+        addOutput(System.out);
+    }
 }

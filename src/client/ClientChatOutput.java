@@ -90,7 +90,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         String username=new String(packet.getField(0));
 
         try{
-            userKeyPair=RSAKeyPair.importKeyPair(username);
+            userKeyPair=RSAKeyPair.importKeyPair("keys/"+username);
             user=new RSAUser(username, RSAEncoder.getInstance().encode(userKeyPair.getPublic()));
             packet.addField(user.getKey());
             //set private key

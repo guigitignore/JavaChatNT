@@ -1,5 +1,6 @@
 package user;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,13 +17,14 @@ import util.Logger;
 public class UserDatabase{
 
     private HashMap<String,User> users=new HashMap<>();
-    private String filename;
+    private File file;
 
     public UserDatabase(String filename){
-        this.filename=filename;
+        file=new File(filename);
         
         try{
-            BufferedReader reader=new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
+            file.getParentFile().mkdirs();
+            BufferedReader reader=new BufferedReader(new InputStreamReader(new FileInputStream(file)));
             Decoder decoder=Base64.getDecoder();
             String line;
             int successCounter=0;
@@ -85,7 +87,7 @@ public class UserDatabase{
     public void export(){
         try{
             Encoder encoder=Base64.getEncoder();
-            PrintStream writer=new PrintStream(new FileOutputStream(filename));
+            PrintStream writer=new PrintStream(new FileOutputStream(file));
 
             for (User user:users.values()){
                 StringBuilder builder=new StringBuilder();

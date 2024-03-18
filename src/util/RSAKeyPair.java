@@ -1,5 +1,6 @@
 package util;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
@@ -17,9 +18,9 @@ public class RSAKeyPair {
     public final static int KEY_SIZE=1024;
     private KeyPair keyPair;
 
-    public static RSAKeyPair importKeyPair(String username) throws Exception{
-        PublicKey pub=RSAEncoder.getInstance().publicDecode(importKey(String.format("%s.pub", username)));
-        PrivateKey priv=RSAEncoder.getInstance().privateDecode(importKey(String.format("%s.priv", username)));
+    public static RSAKeyPair importKeyPair(String prefix) throws Exception{
+        PublicKey pub=RSAEncoder.getInstance().publicDecode(importKey(String.format("%s.pub", prefix)));
+        PrivateKey priv=RSAEncoder.getInstance().privateDecode(importKey(String.format("%s.priv", prefix)));
         return new RSAKeyPair(new KeyPair(pub, priv));
     }
 
@@ -39,9 +40,9 @@ public class RSAKeyPair {
         return (RSAPrivateKey)keyPair.getPrivate();
     }
 
-    public void exportKeyPair(String username) throws Exception{
-        exportKey(String.format("%s.pub",username),keyPair.getPublic());
-        exportKey(String.format("%s.priv",username), keyPair.getPrivate());
+    public void exportKeyPair(String prefix) throws Exception{
+        exportKey(String.format("%s.pub",prefix),keyPair.getPublic());
+        exportKey(String.format("%s.priv",prefix), keyPair.getPrivate());
     }
 
     private static KeyPair generateRSAKeyPair() throws Exception {
@@ -65,7 +66,9 @@ public class RSAKeyPair {
     }
 
     private static void exportKey(String filename,Key key) throws Exception{
-        PrintStream writer=new PrintStream(new FileOutputStream(filename));
+        File file=new File(filename);
+        file.getParentFile().mkdirs();
+        PrintStream writer=new PrintStream(new FileOutputStream(file));
         writer.println(getKeyString(key));
         writer.close();
     }
