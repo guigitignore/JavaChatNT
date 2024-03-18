@@ -12,7 +12,7 @@ LIB_DIR := lib
 
 MANIFEST_DIR:= META-INF
 MANIFEST := $(MANIFEST_DIR)/MANIFEST.MF
-MAIN_CLASS:= Main
+MAIN_CLASS:= javachatnt.Main
 
 #commands
 ifeq ($(OS),Windows_NT)
@@ -92,10 +92,10 @@ cleanlogs:
 jar: $(OUT)
 
 server: $(OBJ)
-	@$(JAVA) -cp "$(CLASSES_PATH)" Main serve 2000 2001:ADMIN
+	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) serve 2000 2001:ADMIN
 
 generator: $(OBJ)
-	@$(JAVA) -cp "$(CLASSES_PATH)" Main generate $(USER)
+	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) generate $(USER)
 
 client: $(OBJ)
-	@$(JAVA) -cp "$(CLASSES_PATH)" Main connect 2000
+	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) connect 2000
