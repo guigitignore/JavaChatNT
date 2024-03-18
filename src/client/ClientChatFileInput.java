@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 
 import packetchat.PacketChat;
 import packetchat.PacketChatOutput;
-import util.DESEncoder;
 import util.Logger;
 import worker.LoopWorker;
 
@@ -41,7 +40,7 @@ public class ClientChatFileInput extends LoopWorker {
 
         if (client.getOutput().getEncryptionStatus()){
             try{
-                filename=new String(DESEncoder.getInstance().decode(packet.getField(1)));
+                filename=new String(client.getCardInterface().decryptDES(packet.getField(1)));
             }catch(Exception e){
                 Logger.w("Cannot decrypt filename");
                 filename=null;
@@ -109,7 +108,7 @@ public class ClientChatFileInput extends LoopWorker {
 
             if (res.getFlag()==PacketChat.ENCRYPTION_FLAG){
                 try{
-                    data=DESEncoder.getInstance().decode(data);
+                    data=client.getCardInterface().decryptDES(data);
                 }catch(Exception e){
                     Logger.w("Cannot decode data of file \"%s\"",filename);
                     throw new IOException();

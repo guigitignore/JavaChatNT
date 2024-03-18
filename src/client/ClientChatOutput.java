@@ -17,10 +17,8 @@ import user.PasswordUser;
 import user.RSAUser;
 import user.User;
 import util.ClientType;
-import util.DESEncoder;
 import util.Logger;
 import util.RSAEncoder;
-import util.RSAKeyPair;
 import util.UserStructEncoder;
 import worker.LoopWorker;
 import worker.WorkerManager;
@@ -86,17 +84,16 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
     }
 
     public void handleOutgoingAuthPacket(PacketChat packet) throws PacketChatException{
-        RSAKeyPair userKeyPair;
         String username=new String(packet.getField(0));
 
+        client.getCardInterface().clearUser();
         try{
-            userKeyPair=RSAKeyPair.importKeyPair("keys/"+username);
-            user=new RSAUser(username, RSAEncoder.getInstance().encode(userKeyPair.getPublic()));
-            packet.addField(user.getKey());
-            //set private key
-            client.getInput().setPrivateKey(userKeyPair.getPrivate());
+            client.getCardInterface().select(username);
+            byte[] pubKey=RSAEncoder.getInstance().encode(client.getCardInterface().getPublicKey());
+            packet.addField(pubKey);
+            user=new RSAUser(username, pubKey);
         }catch(Exception e){
-            Logger.w("cannot load user RSA key: %s. Falling back on password authentification",e.getMessage());
+            Logger.w("cannot select user \"%s\": %s. Falling back on password authentification",username,e.getMessage());
             user=new PasswordUser(username,"");
         }
     }
@@ -146,7 +143,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         }else{
             if (getEncryptionStatus()){
                 try{
-                    packet.replaceField(1,DESEncoder.getInstance().encode(packet.getField(1)));
+                    packet.replaceField(1,client.getCardInterface().encryptDES(packet.getField(1)));
                     packet.setFlag(PacketChat.ENCRYPTION_FLAG);
                 }catch(Exception e){
                     Logger.w("Cannot encrypt message data: %s",e.getMessage());

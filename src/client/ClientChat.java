@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import javacard.IJavacardInterface;
 import packetchat.IPacketChatInterface;
 import packetchat.PacketChat;
 import packetchat.PacketChatBucket;
@@ -36,8 +37,10 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     private NounceManager incomingFiles;
     private NounceManager outgoingFiles;
 
-    public ClientChat(String host,int port) throws Exception{
-        super(new Socket(host, port));
+    private IJavacardInterface cardInterface;
+
+    public ClientChat(IJavacardInterface cardInterface,String host,int port) throws Exception{
+        super(new Socket(host, port),cardInterface);
     }
 
     public String getDescription() {
@@ -83,6 +86,10 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
     public NounceManager getOutgoingFiles(){
         return outgoingFiles;
+    }
+
+    public IJavacardInterface getCardInterface(){
+        return cardInterface;
     }
 
     private void skipWelcomeMessage(InputStream in) throws IOException{
@@ -147,6 +154,8 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     public void run(){
+        cardInterface=(IJavacardInterface)getArgs()[0];
+
         try{
             initStreams();
             mainloop();

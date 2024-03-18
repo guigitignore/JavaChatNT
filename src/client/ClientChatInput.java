@@ -1,15 +1,11 @@
 package client;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.crypto.Cipher;
 
 import packetchat.IPacketChatOutput;
 import packetchat.PacketChat;
 import packetchat.PacketChatException;
 import packetchat.PacketChatFactory;
 import shared.PacketChatSanitizer;
-import util.DESEncoder;
 import util.Logger;
 import worker.LoopWorker;
 import worker.WorkerManager;
@@ -18,7 +14,6 @@ import worker.WorkerManager;
 public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
     private ClientChat client;
     private AtomicBoolean isConnected;
-    private RSAPrivateKey privateKey=null;
     private PacketChatSanitizer sanitizer;
 
     public ClientChatInput(ClientChat client){
@@ -31,10 +26,6 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
 
     public String getDescription() {
         return "ClientChatInput";
-    }
-
-    public void setPrivateKey(RSAPrivateKey key){
-        privateKey=key;
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
@@ -90,7 +81,7 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
             case PacketChat.SEND_MSG:
                 if (packet.getFlag()==PacketChat.ENCRYPTION_FLAG){
                     try{
-                        packet.replaceField(1,DESEncoder.getInstance().decode(packet.getField(1)));       
+                        packet.replaceField(1,client.getCardInterface().decryptDES(packet.getField(1)));       
                     }catch(Exception e){
                         Logger.w("Cannot decrypt message data: %s",e.getMessage());
                         packet=null;
@@ -107,11 +98,9 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
 
         switch(packet.getCommand()){
             case PacketChat.CHALLENGE:
-                if (packet.getFieldsNumber()>=1 && privateKey!=null){
+                if (packet.getFieldsNumber()>=1 && client.getCardInterface().getSelectedUser()!=null){
                     try{
-                        Cipher cipher=Cipher.getInstance( "RSA/NONE/NoPadding", "BC" );
-                        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-                        result=cipher.doFinal(packet.getField(0));
+                        result=client.getCardInterface().solveChallenge(packet.getField(0));
                     }catch(Exception e){
                         Logger.w("cannot solve challenge: %s",e.getMessage());
                     }
@@ -120,7 +109,6 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
                         //drop packet
                         packet=null;
                     }
-                    privateKey=null;
                 }
                 break;
             case PacketChat.AUTH:

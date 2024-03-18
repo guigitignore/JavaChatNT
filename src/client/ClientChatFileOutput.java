@@ -7,7 +7,6 @@ import org.bouncycastle.util.Arrays;
 
 import packetchat.PacketChat;
 import packetchat.PacketChatOutput;
-import util.DESEncoder;
 import util.Logger;
 import worker.LoopWorker;
 
@@ -64,7 +63,7 @@ public class ClientChatFileOutput extends LoopWorker{
 
         if (client.getOutput().getEncryptionStatus()){
             try{
-                encryptedFilename=DESEncoder.getInstance().encode(filename.getBytes());
+                encryptedFilename=client.getCardInterface().encryptDES(filename.getBytes());
             }catch(Exception e){
                 Logger.w("Cannot encrypt filename");
             }
@@ -102,7 +101,7 @@ public class ClientChatFileOutput extends LoopWorker{
 
             if (client.getOutput().getEncryptionStatus()){
                 try{
-                    encryptedData=DESEncoder.getInstance().encode(data);
+                    encryptedData=client.getCardInterface().encryptDES(data);
                 }catch(Exception e){
                     Logger.w("Cannot encrypt data of file \"%d\"",filename);
                 }

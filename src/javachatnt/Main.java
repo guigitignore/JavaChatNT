@@ -8,6 +8,8 @@ import java.util.AbstractMap.SimpleEntry;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import client.ClientChat;
+import javacard.IJavacardInterface;
+import javacard.LocalCardAdapter;
 import server.ServerChat;
 import user.User;
 import util.Logger;
@@ -36,7 +38,10 @@ class Main{
                 generatorMode(modeArgs);
                 break;
             case "connect":
-                clientMode(modeArgs);
+                clientMode(false,modeArgs);
+                break;
+            case "card-connect":
+                clientMode(true,modeArgs);
                 break;
             default:
                 System.err.printf("Unknown mode \"%s\"\n",mode);
@@ -110,7 +115,8 @@ class Main{
         System.exit(0);
     }
 
-    public static void clientMode(String...args){
+    public static void clientMode(boolean cardMode,String...args){
+        IJavacardInterface cardInterface;
         String host=null;
         int port=0;
 
@@ -132,14 +138,24 @@ class Main{
             }else{
                 Logger.e("Cannot write client logs in file: falling back on standard output");
             }
-                
+
             try{
-                new ClientChat(host, port);
+                cardInterface=new LocalCardAdapter();
+
+                try{
+                    new ClientChat(cardInterface,host, port);
+                }catch(Exception e){
+                    Logger.addSTDOUT();
+                    Logger.e("client error: %s",e.getMessage());
+                    System.exit(-1);
+                }
+                
             }catch(Exception e){
                 Logger.addSTDOUT();
-                Logger.e("client error: %s",e.getMessage());
+                Logger.e("Cannot initialize card inferface: %s",e.getMessage());
                 System.exit(-1);
             }
+                
         }catch(NumberFormatException e){
             Logger.e("Invalid port number!");
             System.exit(-1);
