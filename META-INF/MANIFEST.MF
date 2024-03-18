@@ -1,3 +1,0 @@
-Manifest-Version: 1.0
-Main-Class: Main
-Class-Path: apduio-terminal-0.1.jar  apduio.jar  base-core.jar  base-opt.jar  bcprov-jdk18on-177.jar  pcsc-wrapper-2.0.jar

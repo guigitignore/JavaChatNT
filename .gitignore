@@ -1,5 +1,6 @@
 build
 out
+META-INF
 logs
 downloads
 **/*.txt
