@@ -55,5 +55,7 @@ public class LocalCardAdapter implements IJavacardInterface {
         username=null;
         userKeyPair=null;
     }
+
+    public void close() throws Exception {}
     
 }

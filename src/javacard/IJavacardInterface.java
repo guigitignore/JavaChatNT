@@ -17,4 +17,6 @@ public interface IJavacardInterface {
     public byte[] encryptDES(byte[] data) throws Exception;
 
     public byte[] decryptDES(byte[] data) throws Exception;
+
+    public void close() throws Exception;
 }

@@ -22,7 +22,7 @@ ifeq ($(OS),Windows_NT)
 	JAVA := '$(JAVADIR)\java'
 
 	MKDIR := md
-	RMRF := rmdir /s /q
+	RM := rmdir /s /q
 
 	separator=;
 else
@@ -31,7 +31,7 @@ else
 	JAVA=java
 
 	MKDIR=mkdir -p
-	RMRF=rm -rf	
+	RM=rm -rf	
 
 	separator=:
 endif
@@ -55,7 +55,7 @@ CLASSES_PATH:=$(subst $(space),$(separator),$(strip $(BUILD_DIR) $(JAR_LIB)))
 OUT=$(OUT_DIR)/$(JARFILE)
 
 
-all: $(OBJ)
+all: $(BUILD_DIR) $(OBJ)
 
 
 $(BUILD_DIR) $(OUT_DIR) $(MANIFEST_DIR):
@@ -81,11 +81,11 @@ $(MANIFEST): $(MANIFEST_DIR)
 
 clean:
 	@echo Cleaning build...
-	@$(RMRF) $(BUILD_DIR) $(OUT_DIR) $(MANIFEST_DIR)
+	@$(RM) $(BUILD_DIR) $(OUT_DIR) $(MANIFEST_DIR)
 
 cleanlogs:
 	@echo Removing logs...
-	@$(RMRF) $(LOG_DIR)
+	@$(RM) $(LOG_DIR)
 
 jar: $(OUT)
 
@@ -97,3 +97,6 @@ generator: $(OBJ)
 
 client: $(OBJ)
 	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) connect 2000
+
+card-client: $(OBJ)
+	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) card-connect 2000

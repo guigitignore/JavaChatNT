@@ -10,6 +10,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import client.ClientChat;
 import javacard.IJavacardInterface;
 import javacard.LocalCardAdapter;
+import javacard.OpenCardAdapter;
 import server.ServerChat;
 import user.User;
 import util.Logger;
@@ -140,19 +141,21 @@ class Main{
             }
 
             try{
-                cardInterface=new LocalCardAdapter();
+                System.out.println("Initializing card interface...");
+                cardInterface=cardMode?new OpenCardAdapter():new LocalCardAdapter();
 
                 try{
                     new ClientChat(cardInterface,host, port);
                 }catch(Exception e){
                     Logger.addSTDOUT();
                     Logger.e("client error: %s",e.getMessage());
-                    System.exit(-1);
                 }
+
+                cardInterface.close();
                 
             }catch(Exception e){
                 Logger.addSTDOUT();
-                Logger.e("Cannot initialize card inferface: %s",e.getMessage());
+                Logger.e("card interface error: %s",e.getMessage());
                 System.exit(-1);
             }
                 
