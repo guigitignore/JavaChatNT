@@ -153,6 +153,15 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         }
     }
 
+    private void closeCardInterface(){
+        try{
+            cardInterface.close();
+            Logger.i("Card interface sucessfully closed");
+        }catch(Exception e){
+            Logger.e("Cannot close card interface");
+        }
+    }
+
     public void run(){
         cardInterface=(IJavacardInterface)getArgs()[0];
 
@@ -163,7 +172,9 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
             Logger.e("IO error: %s",e.getMessage());
         }
 
-        WorkerManager.getInstance().cancelAll();
+        closeCardInterface();
         WorkerManager.getInstance().remove(this);
+        WorkerManager.getInstance().cancelAll();
+             
     }
 }

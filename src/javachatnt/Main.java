@@ -18,7 +18,7 @@ import util.RSAKeyPair;
 import worker.WorkerManager;
 
 class Main{
-    public static void main(String[] args) {
+    public static void main(String[] args){ 
         if (args.length<1){
             System.err.println("You must specify the mode in argument: server,connect,generate");
             System.exit(-1);
@@ -149,10 +149,10 @@ class Main{
                 }catch(Exception e){
                     Logger.addSTDOUT();
                     Logger.e("client error: %s",e.getMessage());
+                    cardInterface.close();
                 }
 
-                cardInterface.close();
-                
+            
             }catch(Exception e){
                 Logger.addSTDOUT();
                 Logger.e("card interface error: %s",e.getMessage());
