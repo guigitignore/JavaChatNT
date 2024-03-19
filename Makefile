@@ -89,14 +89,14 @@ cleanlogs:
 
 jar: $(OUT)
 
-server: $(OBJ)
+server:  $(BUILD_DIR) $(OBJ)
 	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) serve 2000 2001:ADMIN
 
-generator: $(OBJ)
+generator:  $(BUILD_DIR) $(OBJ)
 	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) generate $(USER)
 
-client: $(OBJ)
+client:  $(BUILD_DIR) $(OBJ)
 	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) connect 2000
 
-card-client: $(OBJ)
+card-client:  $(BUILD_DIR) $(OBJ)
 	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) card-connect 2000

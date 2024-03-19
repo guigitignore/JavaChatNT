@@ -74,12 +74,15 @@ public class ClientChatFileOutput extends LoopWorker{
         }else{
             server.sendFileEncryptedInitRequest(nounce, encryptedFilename,fileSize, dest);
         }
+        output.sendFormattedMessage("Sending file request to \"%s\"", dest);
         
         PacketChat res=client.getBucket().waitPacketAckByNounce(nounce);
 
         if (res.getStatus()==PacketChat.STATUS_ERROR){
-            output.sendFormattedMessage("user \"%s\" reject your file \"%s\"",dest,filename);
+            output.sendFormattedMessage("user \"%s\" has rejected your file \"%s\"",dest,filename);
             throw new InterruptedException();
+        }else{
+            output.sendFormattedMessage("user \"%s\" has accepted your file \"%s\"",dest,filename);
         }
 
         chunk=new byte[CHUNK_SIZE];
