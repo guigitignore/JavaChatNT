@@ -52,7 +52,9 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     public PacketChat getPacketChat() throws PacketChatException {
-        return packetInterface.getPacketChat();
+        PacketChat packet=packetInterface.getPacketChat();
+        Logger.i("got packet: %s",packet.toString());
+        return packet;
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
@@ -141,7 +143,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
 
         while (true){
             try{
-                packet=packetInterface.getPacketChat();
+                packet=getPacketChat();
             }catch(PacketChatException e){
                 break;
             }

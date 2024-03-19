@@ -150,6 +150,7 @@ class Main{
                     Logger.addSTDOUT();
                     Logger.e("client error: %s",e.getMessage());
                     cardInterface.close();
+                    Logger.i("Card interface closed.");
                 }
 
             

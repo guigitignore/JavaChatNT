@@ -33,6 +33,7 @@ public class OpenCardAdapter implements IJavacardInterface{
     public static final byte RSA_GET_MODULUS         =0x03;
 	public static final byte RSA_GET_PUBLIC_EXPONENT =0x04;
 	public static final byte RSA_DECRYPT             =0x05;
+    public static final byte RSA_GET_PRIVATE_EXPONENT=0x06;
 
     public OpenCardAdapter() throws Exception{
         CommandAPDU cmd;
@@ -160,10 +161,10 @@ public class OpenCardAdapter implements IJavacardInterface{
     public void select(String username) throws Exception {
         KeyFactory keyFactory=KeyFactory.getInstance("RSA");
 
-        BigInteger modulus=new BigInteger(sendCommand(RSA_GET_MODULUS));
-        BigInteger exponent=new BigInteger(sendCommand(RSA_GET_PUBLIC_EXPONENT));
+        BigInteger modulus=new BigInteger(1,sendCommand(RSA_GET_MODULUS));
+        BigInteger publicExponent=new BigInteger(1,sendCommand(RSA_GET_PUBLIC_EXPONENT));
 
-        RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(modulus,exponent);
+        RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(modulus,publicExponent);
 
         this.publicKey=(RSAPublicKey)keyFactory.generatePublic(publicKeySpec);
         this.username=username;
@@ -183,7 +184,9 @@ public class OpenCardAdapter implements IJavacardInterface{
     }
 
     public byte[] solveChallenge(byte[] challenge) throws Exception {
-        return sendCommand(RSA_DECRYPT, (byte)0, (byte)0, challenge,(byte)challenge.length);
+        byte[] cardResult=sendCommand(RSA_DECRYPT, (byte)0, (byte)0, challenge,(byte)challenge.length);
+        Logger.i("Card challenge solve=%s\n",Arrays.toString(cardResult));
+        return cardResult;
     }
 
     private byte[] desOperation(byte[] data,byte operation) throws Exception{

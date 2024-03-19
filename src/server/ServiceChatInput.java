@@ -217,12 +217,6 @@ public class ServiceChatInput implements IPacketChatOutput{
 
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
-        if (client.getUser()==null){
-            Logger.i("got packet from %s: %s",client.getDescription(),packet);
-        }else{
-            Logger.i("got packet from user \"%s\": %s",user.getName(), packet);
-        }
-
         switch(packet.getCommand()){
             case PacketChat.AUTH:
                 handleAuthPacket(packet);

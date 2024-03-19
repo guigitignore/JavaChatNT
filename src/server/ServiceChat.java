@@ -156,10 +156,21 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
     }
 
     public PacketChat getPacketChat() throws PacketChatException {
-        return packetChatInterface.getPacketChat();
+        PacketChat packet=packetChatInterface.getPacketChat();
+        if (getUser()==null){
+            Logger.i("got packet from %s: %s",getDescription(),packet);
+        }else{
+            Logger.i("got packet from user \"%s\": %s",getName(), packet);
+        }
+        return packet;
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
+        if (getUser()==null){
+            Logger.i("send packet for %s: %s",getDescription(),packet);
+        }else{
+            Logger.i("send packet for user \"%s\": %s",getUser().getName(),packet);
+        }
         packetChatInterface.putPacketChat(packet);
     }
 

@@ -29,7 +29,6 @@ public class ClientChatInput extends LoopWorker implements IPacketChatOutput{
     }
 
     public void putPacketChat(PacketChat packet) throws PacketChatException {
-        Logger.i("got packet: %s",packet);
         try{
             sanitizer.client(packet);
         }catch(PacketChatException e){
