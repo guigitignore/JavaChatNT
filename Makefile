@@ -26,9 +26,11 @@ ifeq ($(OS),Windows_NT)
 
 	separator=;
 else
-	JAVAC = javac
-	JAR= jar
-	JAVA=java
+#	JAVADIR := /usr/lib/jvm/java-8-openjdk/bin
+	JAVADIR := /usr/bin
+	JAVAC = $(JAVADIR)/javac
+	JAR= $(JAVADIR)/jar
+	JAVA= $(JAVADIR)/java
 
 	MKDIR=mkdir -p
 	RM=rm -rf	
