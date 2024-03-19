@@ -127,6 +127,7 @@ public class ClientChatFileOutput extends LoopWorker{
             }
             server.sendFileOverRequest(nounce, dest);
             client.getBucket().waitPacketAckByNounce(nounce);
+            client.getOutgoingFiles().removeNounce(nounce);
             throw new InterruptedException();
         }
     }

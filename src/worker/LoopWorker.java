@@ -12,7 +12,9 @@ public abstract class LoopWorker extends Thread implements IWorker{
         try{
             setup();
             WorkerManager.getInstance().registerAndStart(this);
-        }catch(Exception e){/*e.printStackTrace();*/}
+        }catch(Exception e){
+            //e.printStackTrace();
+        }
     }
 
     public boolean getStatus() {
@@ -43,11 +45,15 @@ public abstract class LoopWorker extends Thread implements IWorker{
                     break;
                 }
             }
-        }catch(Exception e){/*e.printStackTrace();*/}
+        }catch(Exception e){
+            //e.printStackTrace();
+        }
 
         try{
             cleanup();
-        }catch(Exception e){/*e.printStackTrace();*/}
+        }catch(Exception e){
+            //e.printStackTrace();
+        }
 
         WorkerManager.getInstance().remove(this);
     }

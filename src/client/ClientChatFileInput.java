@@ -38,7 +38,7 @@ public class ClientChatFileInput extends LoopWorker {
         byte[] fileSizeBytes=packet.getField(2);
         fileSize=fileSizeBytes.length>=Integer.BYTES?ByteBuffer.wrap(packet.getField(2)).getInt():-1;
 
-        if (client.getOutput().getEncryptionStatus()){
+        if (packet.isFlagSet(PacketChat.ENCRYPTION_FLAG)){
             try{
                 filename=new String(client.getCardInterface().decryptDES(packet.getField(1)));
             }catch(Exception e){
@@ -49,6 +49,7 @@ public class ClientChatFileInput extends LoopWorker {
             filename=new String(packet.getField(1));
         }
 
+        server=new PacketChatOutput(client,client.getUser().getName());
         //precheck filename and nounce
         if (filename==null || filename.contains("/") || filename.contains("..") || client.getIncomingFiles().isNounceDefined(nounce)){
             server.sendFileInitFailure(nounce);
@@ -57,7 +58,6 @@ public class ClientChatFileInput extends LoopWorker {
         }
         
         output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
-        server=new PacketChatOutput(client,client.getUser().getName());
     }
 
     public void init() throws Exception {
@@ -70,6 +70,7 @@ public class ClientChatFileInput extends LoopWorker {
                 server.sendFileInitSucess(nounce);
             }catch(IOException e){
                 server.sendFileInitFailure(nounce);
+                client.getIncomingFiles().removeNounce(nounce);
                 throw e;
             }
         }else{
@@ -87,6 +88,7 @@ public class ClientChatFileInput extends LoopWorker {
         PacketChat res=client.getBucket().waitPacketByType(PacketChat.FILE_DATA,PacketChat.FILE_OVER);
 
         if (res.getCommand()==PacketChat.FILE_OVER){
+            client.getIncomingFiles().removeNounce(nounce);
             try{
                 fileOutputStream.close();
                 server.sendFileOverSuccess(nounce);
@@ -106,7 +108,7 @@ public class ClientChatFileInput extends LoopWorker {
             }
             data=res.getField(1);
 
-            if (res.getFlag()==PacketChat.ENCRYPTION_FLAG){
+            if (res.isFlagSet(PacketChat.ENCRYPTION_FLAG)){
                 try{
                     data=client.getCardInterface().decryptDES(data);
                 }catch(Exception e){

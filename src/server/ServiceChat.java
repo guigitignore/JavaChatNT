@@ -160,7 +160,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
         if (getUser()==null){
             Logger.i("got packet from %s: %s",getDescription(),packet);
         }else{
-            Logger.i("got packet from user \"%s\": %s",getName(), packet);
+            Logger.i("got packet from user \"%s\": %s",getUser().getName(), packet);
         }
         return packet;
     }
