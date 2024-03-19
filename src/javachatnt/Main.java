@@ -157,6 +157,7 @@ class Main{
             }catch(Exception e){
                 Logger.addSTDOUT();
                 Logger.e("card interface error: %s",e.getMessage());
+                e.printStackTrace();
                 System.exit(-1);
             }
                 

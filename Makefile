@@ -26,9 +26,11 @@ ifeq ($(OS),Windows_NT)
 
 	separator=;
 else
-	JAVAC = javac
-	JAR= jar
-	JAVA=java
+#	JAVADIR := /usr/lib/jvm/java-8-openjdk/bin
+	JAVADIR := /usr/bin
+	JAVAC = $(JAVADIR)/javac
+	JAR= $(JAVADIR)/jar
+	JAVA= $(JAVADIR)/java
 
 	MKDIR=mkdir -p
 	RM=rm -rf	
@@ -99,4 +101,4 @@ client: $(OBJ)
 	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) connect 2000
 
 card-client: $(OBJ)
-	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) card-connect 2000
+	$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) card-connect 2000

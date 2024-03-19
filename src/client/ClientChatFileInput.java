@@ -64,7 +64,7 @@ public class ClientChatFileInput extends LoopWorker {
         if (client.getRequestManager().sendConfirmationRequest("user \"%s\" want to send you a file named \"%s\" (%d bytes).", sender,filename,fileSize) 
         && client.getIncomingFiles().registerNounce(nounce,sender)){
             try{
-                File file=new File("downloads/"+filename);
+                File file=new File(String.format("downloads/%s/%s",client.getUser().getName(),filename));
                 file.getParentFile().mkdirs(); 
                 fileOutputStream=new FileOutputStream(file,false);
                 server.sendFileInitSucess(nounce);
