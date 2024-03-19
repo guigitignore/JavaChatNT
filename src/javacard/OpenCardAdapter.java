@@ -1,6 +1,11 @@
 package javacard;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.Arrays;
 
 import opencard.core.service.CardRequest;
 import opencard.core.service.SmartCard;
@@ -16,12 +21,18 @@ public class OpenCardAdapter implements IJavacardInterface{
     private SmartCard smartcard;
     private PassThruCardService servClient;
 
+    private RSAPublicKey publicKey=null;
+    private String username=null;
+
     private final static int CHUNK_SIZE=248;
     private final static int DES_KEY_SIZE=8;
 
     public static final byte CLA		    =0x00;
 	public static final byte DES_ENCRYPT    =0x01;
 	public static final byte DES_DECRYPT    =0x02;
+    public static final byte RSA_GET_MODULUS         =0x03;
+	public static final byte RSA_GET_PUBLIC_EXPONENT =0x04;
+	public static final byte RSA_DECRYPT             =0x05;
 
     public OpenCardAdapter() throws Exception{
         CommandAPDU cmd;
@@ -83,6 +94,9 @@ public class OpenCardAdapter implements IJavacardInterface{
 			case 0x6F00:
                 result="APDU command aborted. Internal error";
                 break;
+            case 0x6700:
+                result="Invalid APDU command length";
+                break;
 			case -1:
 				result="Invalid APDU reponse length";
                 break;
@@ -95,80 +109,108 @@ public class OpenCardAdapter implements IJavacardInterface{
 
     byte[] sendCommand(byte commandId,byte p1,byte p2,byte[] data,byte expectedLength) throws Exception{
 		//build command
-		byte[] header={CLA,commandId,p1,p2,(byte)(data.length&0xFF)};
-		byte[] command;
+        if (data.length>255) throw new Exception("Data too long");
 
-		//if exepected length is 0, do not send it
-		if (expectedLength==(byte)0){
-			command=new byte[data.length+header.length];
-		}else{
-			command=new byte[data.length+header.length+1];
-			command[command.length-1]=(byte)(expectedLength&0xFF);
-		}
-		 
+        int commandLength=expectedLength!=(byte)0 && data.length!=0?data.length+6:data.length+5;
+        ByteBuffer buffer=ByteBuffer.allocate(commandLength);
+        buffer.put(CLA);
+        buffer.put(commandId);
+        buffer.put(p1);
+        buffer.put(p2);
 
-		System.arraycopy(header,0,command,0,header.length);
-		System.arraycopy(data,0,command,header.length,data.length);
-			
-	    CommandAPDU cmd = new CommandAPDU( command );
-        ResponseAPDU resp = this.sendAPDU( cmd );
+        if (data.length>0){
+            buffer.put((byte)(data.length&0xFF));
+            buffer.put(data);
+
+            if (buffer.hasRemaining()) buffer.put(expectedLength);
+        }
+        
+	    CommandAPDU cmd = new CommandAPDU(buffer.array());
+        ResponseAPDU resp = this.sendAPDU(cmd);
 		int code=getApduCode(resp);
 	    
 		//if apdu is not OK get the error message and throw exception
 		if (code!=0x9000) throw new Exception(getApduErrorFromCode(code));
 		//get bytes
 		byte[] respData=resp.getBytes();
-		byte[] resultData=new byte[respData.length-2];
-		//remove response code
-		System.arraycopy(respData,0,resultData,0,resultData.length);
-		//return bytes
-		return resultData;
+		return Arrays.copyOf(respData, respData.length-2);
 	}
 
-    private byte[] pad(byte[] data){
-        int toAdd=DES_KEY_SIZE-(data.length%DES_KEY_SIZE);
-        byte[] result=new byte[data.length+toAdd];
-        System.arraycopy(data, 0, result, 0, data.length);
-        for (int i=0;i<toAdd;i++) result[data.length+i]=(byte)toAdd;
+    byte[] sendCommand(byte commandId) throws Exception{
+        return sendCommand(commandId, (byte)0, (byte)0, new byte[0],(byte)0);
+    }
+
+    private byte[] pad(byte[] data,int padSize) throws Exception{
+        if (padSize<0x00 || padSize>0xFF) throw new Exception("Invalid padding length"); 
+
+        int toAdd=padSize-(data.length%padSize);
+        int resultLength=data.length+toAdd;
+        byte[] result=Arrays.copyOf(data,resultLength);
+        Arrays.fill(result,data.length,resultLength,(byte)toAdd);
         return result;
     }
 
-    private byte[] unpad(byte[] data){
-        int resultLength=data.length-data[data.length-1];
-        byte[] result=new byte[resultLength];
-        System.arraycopy(data, 0, result, 0, resultLength);
-        return result;
+    private byte[] unpad(byte[] data) throws Exception{
+        int resultLength=data.length-(data[data.length-1]&0xFF);
+        if (resultLength<0) throw new Exception("Invalid padding length");
+        return Arrays.copyOf(data,resultLength);
     }
 
 
     public void select(String username) throws Exception {
-        
-        throw new Exception("Cannot select user");
+        KeyFactory keyFactory=KeyFactory.getInstance("RSA");
+
+        BigInteger modulus=new BigInteger(sendCommand(RSA_GET_MODULUS));
+        BigInteger exponent=new BigInteger(sendCommand(RSA_GET_PUBLIC_EXPONENT));
+
+        RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(modulus,exponent);
+
+        this.publicKey=(RSAPublicKey)keyFactory.generatePublic(publicKeySpec);
+        this.username=username;
     }
 
     public String getSelectedUser() {
-        return null;
+        return username;
     }
 
     public RSAPublicKey getPublicKey() {
-        return null;
+        return publicKey;
     }
 
     public void clearUser() {
-        
+        this.username=null;
+        this.publicKey=null;
     }
 
     public byte[] solveChallenge(byte[] challenge) throws Exception {
-        throw new Exception("Cannot solve challenge");
+        return sendCommand(RSA_DECRYPT, (byte)0, (byte)0, challenge,(byte)challenge.length);
+    }
+
+    private byte[] desOperation(byte[] data,byte operation) throws Exception{
+        byte[] chunk;
+        byte[] result;
+        ByteBuffer buffer=ByteBuffer.wrap(data);
+
+        while (buffer.hasRemaining()){
+            int pos=buffer.position();
+            chunk=buffer.remaining()>CHUNK_SIZE?new byte[CHUNK_SIZE]:new byte[buffer.remaining()];
+            buffer.get(chunk);
+            buffer.position(pos);
+            result=sendCommand(operation,(byte)0,(byte)0,chunk,(byte)chunk.length);
+
+            if (result.length!=chunk.length) throw new Exception("Invalid result length");
+
+            buffer.put(result);
+        }
+        return buffer.array();
     }
 
     public byte[] encryptDES(byte[] data) throws Exception {
-        data=pad(data);
-        return sendCommand(DES_ENCRYPT,(byte)0,(byte)0,data,(byte)data.length) ;
+        return desOperation(pad(data,DES_KEY_SIZE), DES_DECRYPT);
     }
 
     public byte[] decryptDES(byte[] data) throws Exception {
-        return unpad(sendCommand(DES_DECRYPT,(byte)0,(byte)0,data,(byte)data.length));
+        return unpad(desOperation(data, DES_DECRYPT));
     }
 
     public void close() throws Exception {
