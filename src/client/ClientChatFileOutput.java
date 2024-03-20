@@ -51,7 +51,7 @@ public class ClientChatFileOutput extends LoopWorker{
             output.sendFormattedMessage("Cannot get a valid nounce for file \"%s\"",filename);
             throw new InterruptedException();
         }
-        nounce=testNounce;        
+        nounce=testNounce;      
 
         output=new PacketChatOutput(client.getMessageInterface(),ClientChat.CLIENT_NAME);
         server=new PacketChatOutput(client,client.getUser().getName());

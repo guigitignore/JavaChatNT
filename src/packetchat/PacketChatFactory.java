@@ -74,6 +74,7 @@ public class PacketChatFactory{
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.FILE_INIT);
+        packet.setParam(nounce);
         if (encrypted) packet.setFlag(PacketChat.ENCRYPTION_FLAG);
         packet.addField(sender.getBytes());
         packet.addField(filename);
@@ -86,6 +87,7 @@ public class PacketChatFactory{
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.FILE_DATA);
+        packet.setParam(nounce);
         if (encrypted) packet.setFlag(PacketChat.ENCRYPTION_FLAG);
         packet.addField(sender.getBytes());
         packet.addField(data);
@@ -97,6 +99,7 @@ public class PacketChatFactory{
         PacketChat packet=new PacketChat();
 
         packet.setCommand(PacketChat.FILE_OVER);
+        packet.setParam(nounce);
         packet.addField(sender.getBytes());
         packet.addField(dest.getBytes());
         return packet;
@@ -105,6 +108,7 @@ public class PacketChatFactory{
     private static PacketChat createFileStatusPacket(byte command,byte nounce,boolean status){
         PacketChat packet=new PacketChat();
         packet.setCommand(command);
+        packet.setParam(nounce);
         if (status) packet.setStatus(PacketChat.STATUS_SUCCESS);
         else packet.setStatus(PacketChat.STATUS_ERROR);
         return packet;

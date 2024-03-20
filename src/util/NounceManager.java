@@ -18,6 +18,7 @@ public class NounceManager {
         synchronized(nounces){
             for (int i=0;i<256;i++){
                 if (nounces.putIfAbsent((byte)i, entry)==null){
+                    Logger.i("Generate nounce=%d",i);
                     result=(byte)i;
                     break;
                 }
