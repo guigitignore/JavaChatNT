@@ -95,6 +95,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     private void skipWelcomeMessage(InputStream in) throws IOException{
+        Logger.i("skipping welcome message...");
         while(true){
             int available=in.available();
             if (available>0){
@@ -110,6 +111,7 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
     }
 
     private void sendHelloPacket(OutputStream out) throws IOException{
+        Logger.i("sending hello packet...");
         try{
             PacketChatFactory.createHelloPacket().send(out);
         }catch(PacketChatException e){

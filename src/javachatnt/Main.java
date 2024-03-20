@@ -143,7 +143,7 @@ class Main{
             try{
                 System.out.println("Initializing card interface...");
                 cardInterface=cardMode?new OpenCardAdapter():new LocalCardAdapter();
-
+                System.out.println("Initializing client...");
                 try{
                     new ClientChat(cardInterface,host, port);
                 }catch(Exception e){

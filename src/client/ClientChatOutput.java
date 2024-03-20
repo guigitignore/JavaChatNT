@@ -117,7 +117,7 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
                     sendFileTo(args);
                     packet=null;
                     break;
-                case "sendfiletoall":
+                case "sendfileall":
                     sendFileToAll(args);
                     packet=null;
                     break;
@@ -207,8 +207,8 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         StringBuilder builder;
         builder=new StringBuilder();
         builder.append("list of heavy client commands:\n");
-        builder.append("/sendFileTo - send message to a client\n");
-        builder.append("/sendFileToAll - send message to all\n");
+        builder.append("/sendFileTo - send file(s) to a client\n");
+        builder.append("/sendFileAll - send file(s) to all\n");
         builder.append("/listusers - list connected users\n");
         builder.append("/allow - accept a request\n");
         builder.append("/deny - reject a request\n");
