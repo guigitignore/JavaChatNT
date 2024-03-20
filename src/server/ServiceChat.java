@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.util.Map.Entry;
 
 import packetchat.IPacketChatInterface;
 import packetchat.IServiceChat;
@@ -135,6 +136,37 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
         }
     }
 
+    private void cancelNounces(){
+        for (Entry<Byte,Entry<String,Boolean>> nounce:getIncomingFiles()){
+            String username=nounce.getValue().getKey();
+            IServiceChat user=ServerChatManager.getInstance().getClientsByName(username);
+            byte nounceValue=nounce.getKey();
+
+            try{
+                if (nounce.getValue().getValue()){
+                    user.getOutput().sendFileOverFailure(nounceValue);
+                }else{
+                    user.getOutput().sendFileInitFailure(nounceValue);
+                }
+            }catch(PacketChatException e){
+                Logger.w("Cannot send cancel request to %s",username);
+            }
+        }
+        for (Entry<Byte,Entry<String,Boolean>> nounce:getOutgoingFiles()){
+            String username=nounce.getValue().getKey();
+            IServiceChat user=ServerChatManager.getInstance().getClientsByName(username);
+            byte nounceValue=nounce.getKey();
+
+            if (nounce.getValue().getValue()){
+                try{
+                    user.getOutput().sendFileOverRequest(nounceValue, username);
+                }catch(PacketChatException e){
+                    Logger.w("Cannot send cancel request to %s",username);
+                }
+            }
+        }
+    }
+
     public void run(){
         this.server=(ServerChat)getArgs()[0];
         
@@ -144,6 +176,7 @@ public class ServiceChat extends SocketWorker implements IServiceChat,IPacketCha
             mainloop();
         }catch(IOException e){}
 
+        cancelNounces();
         ServerChatManager.getInstance().remove(this);
         server.remove(this);
         WorkerManager.getInstance().remove(this);

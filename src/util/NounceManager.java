@@ -1,9 +1,11 @@
 package util;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 
-public class NounceManager {
-    private HashMap<Byte,SimpleEntry<String,Boolean>> nounces=new HashMap<>();
+public class NounceManager implements Iterable<Entry<Byte,Entry<String,Boolean>>>{
+    private HashMap<Byte,Entry<String,Boolean>> nounces=new HashMap<>();
 
     public boolean registerNounce(byte nounce,String username){
         synchronized(nounces){
@@ -13,7 +15,7 @@ public class NounceManager {
 
     public Byte generateNounce(String username){
         Byte result=null;
-        SimpleEntry<String,Boolean> entry=new SimpleEntry<String,Boolean>(username,false);
+        Entry<String,Boolean> entry=new SimpleEntry<String,Boolean>(username,false);
 
         synchronized(nounces){
             for (int i=0;i<256;i++){
@@ -30,7 +32,7 @@ public class NounceManager {
     public boolean allowNounce(byte nounce,String username){
         boolean result=false;
         synchronized(nounces){
-            SimpleEntry<String,Boolean> entry=nounces.get(nounce);
+            Entry<String,Boolean> entry=nounces.get(nounce);
             if (entry!=null && entry.getKey().equals(username)){
                 entry.setValue(true);
                 nounces.replace(nounce, entry);
@@ -46,7 +48,7 @@ public class NounceManager {
 
     public boolean isNounceAllowed(byte nounce,String username){
         synchronized(nounces){
-            SimpleEntry<String,Boolean> entry=nounces.get(nounce);
+            Entry<String,Boolean> entry=nounces.get(nounce);
             return entry!=null && entry.getKey().equals(username) && entry.getValue()==true;
         }
     }
@@ -75,5 +77,22 @@ public class NounceManager {
             }
         }
         return result;
-    }    
+    }
+    
+    public Iterator<Entry<Byte,Entry<String,Boolean>>> iterator(){
+        synchronized(nounces){
+            return nounces.entrySet().iterator();
+        }  
+    }
+
+    public String toString(){
+        StringBuilder builder=new StringBuilder();
+        
+        for (Entry<Byte,Entry<String,Boolean>> nounce:this){
+            Entry<String,Boolean> value=nounce.getValue();
+            builder.append(String.format("nounce=%d user=\"%s\" allowed=%b\n",nounce.getKey(),value.getKey(),value.getValue()));
+        }
+        return builder.toString();
+    }
+    
 }

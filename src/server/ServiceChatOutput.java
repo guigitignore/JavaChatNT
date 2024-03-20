@@ -1,4 +1,5 @@
 package server;
+
 import packetchat.IPacketChatInterface;
 import packetchat.IPacketChatOutput;
 import packetchat.PacketChat;
