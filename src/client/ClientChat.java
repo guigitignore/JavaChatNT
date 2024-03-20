@@ -124,8 +124,8 @@ public class ClientChat extends SocketWorker implements IPacketChatInterface,IUs
         OutputStream out=getSocket().getOutputStream();
         InputStream stdin=System.getProperty("java.version").startsWith("1.")?System.in:new InterruptibleInputStream();
 
-        skipWelcomeMessage(in);
         sendHelloPacket(out);
+        skipWelcomeMessage(in);
 
         packetInterface=new PacketChatRawInterface(in,out);
         messageInterface=new PacketChatTelnetInterface(stdin,System.out);
