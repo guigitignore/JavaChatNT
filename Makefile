@@ -23,6 +23,7 @@ ifeq ($(OS),Windows_NT)
 
 	MKDIR := md
 	RM := rmdir /s /q
+	CP := copy
 
 	separator=;
 else
@@ -34,6 +35,7 @@ else
 
 	MKDIR=mkdir -p
 	RM=rm -rf	
+	CP=cp
 
 	separator=:
 endif
@@ -71,9 +73,9 @@ $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
 
 $(OUT_DIR)/%.jar: $(LIB_DIR)/%.jar
 	@echo Copying $< into $@...
-	@cp $< $@
+	@$(CP) $< $@
 
-$(OUT): $(OUT_DIR) $(OBJ) $(JAR_OUT) $(MANIFEST)
+$(OUT): $(OUT_DIR)  $(BUILD_DIR) $(OBJ) $(JAR_OUT) $(MANIFEST)
 	@echo Creating jar $@...
 	@$(JAR) cvfm $(OUT) $(MANIFEST) -C $(BUILD_DIR) .
 
