@@ -227,26 +227,31 @@ public class ClientChatOutput extends LoopWorker implements IPacketChatOutput,IU
         if (tokens.countTokens()<2){
             output.sendMessage("this command expects at least 2 arguments");
         }else{
-            filename=tokens.nextToken();
-            fileSize=checkFile(filename);
-            if (fileSize>0){
-                do{
-                    dest=tokens.nextToken();
+            dest=tokens.nextToken();
+            do{
+                filename=tokens.nextToken();
+                fileSize=checkFile(filename);
+                if (fileSize>0){
                     new ClientChatFileOutput(client, filename,fileSize, dest);
-                }while(tokens.hasMoreTokens());
-            }
+                }   
+            }while(tokens.hasMoreTokens());
         }
     }
 
-    private void sendFileToAll(String filename) throws PacketChatException{
-        int fileSize=checkFile(filename);
-        if (fileSize>0){
-            for (SimpleEntry<String,ClientType> user:getConnectedUsers()){
-                if (!user.getKey().equals(client.getUser().getName())){
-                    new ClientChatFileOutput(client, filename,fileSize, user.getKey());
+    private void sendFileToAll(String args) throws PacketChatException{
+        StringTokenizer tokens=new StringTokenizer(args," ");
+
+        do{
+            String filename=tokens.nextToken();
+            int fileSize=checkFile(filename);
+            if (fileSize>0){
+                for (SimpleEntry<String,ClientType> user:getConnectedUsers()){
+                    if (!user.getKey().equals(client.getUser().getName())){
+                        new ClientChatFileOutput(client, filename,fileSize, user.getKey());
+                    }
                 }
             }
-        }
+        }while(tokens.hasMoreTokens());
     }
 
     //return file size or -1 in case of error
