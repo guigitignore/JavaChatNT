@@ -48,8 +48,7 @@ OBJ := $(patsubst $(SRC_DIR)/%.java,$(BUILD_DIR)/%.class,$(SRC))
 
 # List of jar files inside lib folder
 JAR_LIB := $(call rwildcard,$(LIB_DIR),*.jar)
-# List of jar file in out folder
-JAR_OUT := $(patsubst $(LIB_DIR)/%.jar,$(OUT_DIR)/%.jar,$(JAR_LIB))
+# List of jar file in manifest
 JAR_NAME := $(patsubst $(LIB_DIR)/%.jar,%.jar,$(JAR_LIB))
 
 noop=
@@ -71,11 +70,8 @@ $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
 	@echo Compiling $<...
 	@$(JAVAC) -cp "$(CLASSES_PATH)" $< -d $(BUILD_DIR) -sourcepath $(SRC_DIR)
 
-$(OUT_DIR)/%.jar: $(LIB_DIR)/%.jar
-	@echo Copying $< into $@...
-	@$(CP) $< $@
 
-$(OUT): $(OUT_DIR)  $(BUILD_DIR) $(OBJ) $(JAR_OUT) $(MANIFEST)
+$(OUT): $(BUILD_DIR) $(OBJ) $(MANIFEST) libraries
 	@echo Creating jar $@...
 	@$(JAR) cvfm $(OUT) $(MANIFEST) -C $(BUILD_DIR) .
 
@@ -93,6 +89,9 @@ cleanlogs:
 	@echo Removing logs...
 	@$(RM) $(LOG_DIR)
 
+libraries: $(OUT_DIR)
+	@$(CP) $(LIB_DIR)/* $(OUT_DIR)
+
 jar: $(OUT)
 
 server:  $(BUILD_DIR) $(OBJ)
@@ -105,4 +104,4 @@ client:  $(BUILD_DIR) $(OBJ)
 	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) connect 2000
 
 card-client:  $(BUILD_DIR) $(OBJ)
-	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) card-connect 2000
+	@$(JAVA) -Djava.library.path=$(LIB_DIR) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) card-connect 2000
