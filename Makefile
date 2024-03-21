@@ -23,7 +23,7 @@ ifeq ($(OS),Windows_NT)
 
 	MKDIR := md
 	RM := rmdir /s /q
-	CP := copy
+	CP := xcopy /E /i
 
 	separator=;
 else
@@ -35,7 +35,7 @@ else
 
 	MKDIR=mkdir -p
 	RM=rm -rf	
-	CP=cp
+	CP=cp -r
 
 	separator=:
 endif
@@ -62,7 +62,7 @@ OUT=$(OUT_DIR)/$(JARFILE)
 all: $(BUILD_DIR) $(OBJ)
 
 
-$(BUILD_DIR) $(OUT_DIR) $(MANIFEST_DIR):
+$(BUILD_DIR) $(MANIFEST_DIR):
 	@echo Creating folder $@...
 	@$(MKDIR) ${@:/=}
 
@@ -71,7 +71,7 @@ $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
 	@$(JAVAC) -cp "$(CLASSES_PATH)" $< -d $(BUILD_DIR) -sourcepath $(SRC_DIR)
 
 
-$(OUT): $(BUILD_DIR) $(OBJ) $(MANIFEST) libraries
+$(OUT): $(BUILD_DIR) $(OBJ) $(MANIFEST) $(OUT_DIR)
 	@echo Creating jar $@...
 	@$(JAR) cvfm $(OUT) $(MANIFEST) -C $(BUILD_DIR) .
 
@@ -80,6 +80,9 @@ $(MANIFEST): $(MANIFEST_DIR)
 	@echo Manifest-Version: 1.0 >> $(MANIFEST)
 	@echo Main-Class: $(MAIN_CLASS) >> $(MANIFEST)
 	@echo Class-Path: $(JAR_NAME) >> $(MANIFEST)
+
+$(OUT_DIR): $(LIB_DIR)
+	@$(CP) $(LIB_DIR) $(OUT_DIR)
 
 clean:
 	@echo Cleaning build...
