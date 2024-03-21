@@ -1,6 +1,3 @@
-# This makefile allows to compile automatically java files and produce a jar
-rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *,%,$2),$d))
-
 # Main target and filename of the executable
 JARFILE := main.jar
 OPENCARD=opencard.properties
@@ -18,16 +15,17 @@ MAIN_CLASS:= javachatnt.Main
 
 #commands
 ifeq ($(OS),Windows_NT)
-	JAVADIR :=C:\Program Files (x86)\Java\jdk1.8.0_202\bin
-	JAVAC := "$(JAVADIR)\javac"
-	JAR := "$(JAVADIR)\jar"
-	JAVA := "$(JAVADIR)\java"
+	JAVADIR =C:\Program Files (x86)\Java\jdk1.8.0_202\bin
+	JAVAC = "$(JAVADIR)\javac"
+	JAR = "$(JAVADIR)\jar"
+	JAVA = "$(JAVADIR)\java"
+	DEVNULL = NUL
 
-	MKDIR := md
-	RM := rmdir /s /q
-	CPR := xcopy /E /i
-	CP := copy
-	RUNNER:= start.bat
+	MKDIR = md
+	RM = rmdir /s /q
+	CPR = xcopy /E /i
+	CP = copy
+	RUNNER= start.bat
 
 	separator=;
 else
@@ -36,17 +34,19 @@ else
 	JAVAC = $(JAVADIR)/javac
 	JAR= $(JAVADIR)/jar
 	JAVA= $(JAVADIR)/java
+	DEVNULL = /dev/null
 
 	MKDIR=mkdir -p
 	RM=rm -rf	
 	CPR=cp -r
-	CP := cp
-	RUNNER := start.sh
+	CP = cp
+	RUNNER = start.sh
 
 	separator=:
 endif
 
-
+# This makefile allows to compile automatically java files and produce a jar
+rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *,%,$2),$d))
 # List of all the .java source files to compile
 SRC := $(call rwildcard,$(SRC_DIR),*.java)
 # List of all the .class object files to produce
@@ -79,7 +79,7 @@ $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
 
 $(OUT): $(BUILD_DIR) $(OBJ) $(MANIFEST) $(OUT_DIR) $(OUT_DIR)/$(RUNNER)
 	@echo Creating jar $@...
-	@$(JAR) cvfm $(OUT) $(MANIFEST) -C $(BUILD_DIR) .
+	@$(JAR) cvfm $(OUT) $(MANIFEST) -C $(BUILD_DIR) . > $(DEVNULL)
 	@$(RM) $(MANIFEST_DIR)
 
 $(MANIFEST): $(MANIFEST_DIR)
@@ -95,11 +95,14 @@ $(OUT_DIR): $(LIB_DIR)
 $(OUT_DIR)/$(RUNNER): $(OUT_DIR)
 ifeq ($(OS),Windows_NT)
 	@echo @echo off >> $(OUT_DIR)/$(RUNNER)
-	@echo echo running main.jar... >> $(OUT_DIR)/$(RUNNER)
+	@echo echo running $(JARFILE)... >> $(OUT_DIR)/$(RUNNER)
 	@echo $(JAVA) -Djava.library.path=. -jar $(JARFILE) %%* >> $(OUT_DIR)/$(RUNNER)
 	@echo pause >> $(OUT_DIR)/$(RUNNER)
 else
-
+	@echo "#!/bin/bash" >> $(OUT_DIR)/$(RUNNER)
+	@echo "echo running $(JARFILE)..." >> $(OUT_DIR)/$(RUNNER)
+	@echo "$(JAVA) -Djava.library.path=. -jar $(JARFILE) \$$@" >> $(OUT_DIR)/$(RUNNER)
+	@chmod +x $(OUT_DIR)/$(RUNNER)
 endif
 
 clean: $(BUILD_DIR)

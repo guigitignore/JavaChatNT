@@ -20,7 +20,7 @@ import worker.WorkerManager;
 class Main{
     public static void main(String[] args){ 
         if (args.length<1){
-            System.err.println("You must specify the mode in argument: server,connect,generate");
+            System.err.println("You must specify the mode in argument: server, connect, card-connect, generate");
             System.exit(-1);
         }
 
