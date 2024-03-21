@@ -3,6 +3,7 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *
 
 # Main target and filename of the executable
 JARFILE := main.jar
+OPENCARD=opencard.properties
 OUT_DIR :=out
 
 BUILD_DIR := build
@@ -14,16 +15,19 @@ MANIFEST_DIR:= META-INF
 MANIFEST := $(MANIFEST_DIR)/MANIFEST.MF
 MAIN_CLASS:= javachatnt.Main
 
+
 #commands
 ifeq ($(OS),Windows_NT)
 	JAVADIR :=C:\Program Files (x86)\Java\jdk1.8.0_202\bin
-	JAVAC := '$(JAVADIR)\javac'
-	JAR := '$(JAVADIR)\jar'
-	JAVA := '$(JAVADIR)\java'
+	JAVAC := "$(JAVADIR)\javac"
+	JAR := "$(JAVADIR)\jar"
+	JAVA := "$(JAVADIR)\java"
 
 	MKDIR := md
 	RM := rmdir /s /q
-	CP := xcopy /E /i
+	CPR := xcopy /E /i
+	CP := copy
+	RUNNER:= start.bat
 
 	separator=;
 else
@@ -35,7 +39,9 @@ else
 
 	MKDIR=mkdir -p
 	RM=rm -rf	
-	CP=cp -r
+	CPR=cp -r
+	CP := cp
+	RUNNER := start.sh
 
 	separator=:
 endif
@@ -71,9 +77,10 @@ $(BUILD_DIR)/%.class: $(SRC_DIR)/%.java
 	@$(JAVAC) -cp "$(CLASSES_PATH)" $< -d $(BUILD_DIR) -sourcepath $(SRC_DIR)
 
 
-$(OUT): $(BUILD_DIR) $(OBJ) $(MANIFEST) $(OUT_DIR)
+$(OUT): $(BUILD_DIR) $(OBJ) $(MANIFEST) $(OUT_DIR) $(OUT_DIR)/$(RUNNER)
 	@echo Creating jar $@...
 	@$(JAR) cvfm $(OUT) $(MANIFEST) -C $(BUILD_DIR) .
+	@$(RM) $(MANIFEST_DIR)
 
 $(MANIFEST): $(MANIFEST_DIR)
 	@echo Generating manifest...
@@ -82,20 +89,32 @@ $(MANIFEST): $(MANIFEST_DIR)
 	@echo Class-Path: $(JAR_NAME) >> $(MANIFEST)
 
 $(OUT_DIR): $(LIB_DIR)
-	@$(CP) $(LIB_DIR) $(OUT_DIR)
+	@$(CPR) $(LIB_DIR) $(OUT_DIR)
+	@$(CP) $(OPENCARD) $(OUT_DIR)
 
-clean:
+$(OUT_DIR)/$(RUNNER): $(OUT_DIR)
+ifeq ($(OS),Windows_NT)
+	@echo @echo off >> $(OUT_DIR)/$(RUNNER)
+	@echo echo running main.jar... >> $(OUT_DIR)/$(RUNNER)
+	@echo $(JAVA) -Djava.library.path=. -jar $(JARFILE) %%* >> $(OUT_DIR)/$(RUNNER)
+	@echo pause >> $(OUT_DIR)/$(RUNNER)
+else
+
+endif
+
+clean: $(BUILD_DIR)
 	@echo Cleaning build...
-	@$(RM) $(BUILD_DIR) $(OUT_DIR) $(MANIFEST_DIR)
+	@$(RM) $(BUILD_DIR)
 
 cleanlogs:
 	@echo Removing logs...
 	@$(RM) $(LOG_DIR)
 
-libraries: $(OUT_DIR)
-	@$(CP) $(LIB_DIR)/* $(OUT_DIR)
+release: $(OUT)
 
-jar: $(OUT)
+unrelease: $(OUT_DIR)
+	@echo Cleaning release...
+	@$(RM) $(OUT_DIR)
 
 server:  $(BUILD_DIR) $(OBJ)
 	@$(JAVA) -cp "$(CLASSES_PATH)" $(MAIN_CLASS) serve 2000 2001:ADMIN
