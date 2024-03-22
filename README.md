@@ -161,6 +161,6 @@ Project is divided in several packages:
 
 ## Authors
 
-@guigitignore / @nebuloss for the project
+[@guigitignore](https://github.com/guigitignore) / [@nebuloss](https://github.com/nebuloss) for the project
 
-@asayuGit for the DuckyChat RFC
+[@asayuGit](https://github.com/asayugit) for the DuckyChat RFC
