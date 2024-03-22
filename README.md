@@ -1,6 +1,6 @@
 # JavaChatNT
 
-JavaChatNT implements both heavy client and server compliant with the DuckyChat protocol.
+JavaChatNT implements both heavy client and server compliant with the DuckyChat protocol. You can find the protocol specifications in `docs` folder.
 
 ## Requirements
 
@@ -20,8 +20,9 @@ Then you can start `pcscd.service`
 To test your smartcard reader, it is recommanded to install `pcsc-tools` package and to run `pcsc_scan` command
 
 You can find more informations on these websites:
-[https://jpmrblood.github.io/linux/driver/tips/install-ocf-pcsc-omnikey5432/]()
-[https://muscle.apdu.fr/musclecard.com/middle.html]()
+
+- [https://jpmrblood.github.io/linux/driver/tips/install-ocf-pcsc-omnikey5432/]()
+- [https://muscle.apdu.fr/musclecard.com/middle.html]()
 
 ### Windows
 
@@ -42,8 +43,8 @@ If you want to test server: `make server` (it will listen on port 2000 for USER 
 If you want to test heavy client: `make client` (it will connect to the server using port 2000)
 If you want to test heavy cleint with a smartcard: `make card-client`
 
-To build jar file and release the project: `make release`. 
-It will create a folder named `out` and put all necessary files in it. 
+To build jar file and release the project: `make release`.
+It will create a folder named `out` and put all necessary files in it.
 It will create a launcher named `start.sh` on Linux and `start.bat` on windows.
 You can copy this folder in another location.
 
@@ -61,12 +62,16 @@ You can specify which type of user is allowed using `:` separator.
 Currently there is only two types of account: `USER` and `ADMIN`
 
 `./start server 2000:USER 2001:USER,ADMIN`
-/!\ the order is very important. If an account does not exist, it will be automatically registered using the first account type specified. 
+/!\ the order is very important. If an account does not exist, it will be automatically registered using the first account type specified.
 You should always put the lowest privilege account type in first place if you open this port to others.
+
+User database is stored in `db `folder in a file called `users.txt`.
 
 ### Telnet client
 
-You can use `netcat` (recommanded) or `telnet` to join the server. 
+You can use `netcat` (recommanded) or `telnet` to join the server.
+
+Example: `nc localhost 2000`
 You will not be able to send files, cipher data or to use public key authentification.
 
 ### Heavy client
@@ -88,9 +93,74 @@ It you register a new user with a keypair defined in this folder, it will automa
 
 ## Commands
 
+All command must start with a slash character.
+
+If a commands is not found on a layer, it is transmitted to the upper layer.
+
+There is 3 differents layer defined: Telnet interface (for all types of clients), ClientChatOutput (only for heavy clients), ServiceChatInput (server layer)
+
+### Basic commands
+
+- help: list available commands
+- sendmsgto `<dest> <message>` (send message to a single user)
+- sendmsgall `<message>` (broadcast message: default message behaviour)
+- exit (disconnect and stop client)
+
+### Heavy client commands
+
+- sendfileto `<dest> <file1> [<file2> ...]` (send file to another heavy client)
+- sendfileall `<file1> [<file2> ...] `(send file to all heavy clients)
+- encryption `<on/off>` (activate or deactivate message & file encryption)
+- listusers (list connected users with the type of their clients)
+- allow `<nounce>`  (accept a request)
+- deny `<nounce>`   (reject a request)
+
+### Server commands
+
+#### User
+
+- hello (send you a test message)
+- whoami (give you some informations about your user and current session)
+- listusers (list connected users with the type of their clients)
+
+#### Admin
+
+- ps (list workers running on server)
+- kill `<index> `(stop a worker: if you stop a server worker, all clients worker will also be halted)
+- shutdown (stop the server)
+- wall `<message>` (send message to admin users only)
+- kick `<username> `(force user disconnection)
+- addpwduser `<username> <password>` (register new password user)
+- addrsauser `<username> <rsa pub key base64>` (register rsa user)
+- as `<username> <message> `(send message with another user identity)
+- server `<message>` (send message as server)
+
 ## Logs
 
 Logs are stored inside `logs` folder. A new log file is created each time you are running a new instance of a server or a heavy client.
 They are automatically named with the date and time of the process creation.
 
 ## About Project
+
+Project is divided in several packages:
+
+- packetchat (implement DuckyChat packet specification)
+- server (server implementation)
+- client (heavy client implementation)
+- shared (packetchat interfaces shared by client and server)
+- worker (used to manage thread lifetime)
+- javacard (javacard interface use by heacy client: smartcard or localhost)
+- util (some useful classes)
+- javachatnt (main class)
+- user (database and account management)
+
+## TODO
+
+- Fix display in windows telnet client
+- Add more user role and assign command dynamically for each role
+
+## Authors
+
+@guigitignore / @nebuloss for the project
+
+@asayuGit for the DuckyChat RFC
